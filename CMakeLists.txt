@@ -21,6 +21,7 @@ add_library("azrtos::${PROJECT_NAME}" ALIAS ${PROJECT_NAME})
 # Define any required dependencies between this library and others
 target_link_libraries(${PROJECT_NAME} PUBLIC 
     "azrtos::threadx"
+    "azrtos::filex"
 )
 
 # Pick up the common stuff
