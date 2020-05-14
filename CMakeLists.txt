@@ -27,3 +27,16 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 # Pick up the common stuff
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/common)
 
+# Enable a build target that produces a ZIP file of all sources
+set(CPACK_SOURCE_GENERATOR "ZIP")
+set(CPACK_SOURCE_IGNORE_FILES
+  \\.git/
+  \\.github/
+  _build/
+  \\.git
+  \\.gitattributes
+  \\.gitignore
+  ".*~$"
+)
+set(CPACK_VERBATIM_VARIABLES YES)
+include(CPack)
