@@ -1,4 +1,4 @@
-# Azure RTOS NetX
+# Azure RTOS LevelX
 
 LevelX provides NAND and NOR flash wear leveling facilities to embedded applications. Since both NAND and NOR flash memory can only be erased a finite number of times, it’s critical to distribute the flash memory use evenly. This is typically called “wear leveling” and is the purpose behind LevelX. LevelX presents to the user an array of logical sectors that are mapped to physical flash memory inside of LevelX. Applications may use LevelX in conjunction with FileX or may read/write logical sectors directly. LevelX is designed for fault tolerance. Flash updates are performed in a multiple-step process that can be interrupted in each step. LevelX automatically recovers to the optimal state during the next operation.
 
