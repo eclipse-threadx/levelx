@@ -4,7 +4,7 @@ LevelX provides NAND and NOR flash wear leveling facilities to embedded applicat
 
 ## Documentation
 
-Documentation for this library can be found here: http://docs.microsoft.com/azure/rtos/levelx
+Documentation for this library can be found here: https://github.com/azure-rtos/levelx/releases/download/v6.0_rel/Azure_RTOS_LevelX_User_Guide.pdf
 
 # Understanding inter-component dependencies
 
