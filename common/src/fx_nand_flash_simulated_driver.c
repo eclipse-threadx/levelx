@@ -69,7 +69,7 @@ VOID  _fx_nand_flash_simulator_driver(FX_MEDIA *media_ptr);
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _fx_nand_simulator_driver                           PORTABLE C      */ 
-/*                                                           6.0          */
+/*                                                           6.1          */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -120,6 +120,8 @@ VOID  _fx_nand_flash_simulator_driver(FX_MEDIA *media_ptr);
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
 /*  05-19-2020     William E. Lamie         Initial Version 6.0           */
+/*  09-30-2020     William E. Lamie         Modified comment(s),          */
+/*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
 VOID  _fx_nand_flash_simulator_driver(FX_MEDIA *media_ptr)

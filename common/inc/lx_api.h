@@ -26,7 +26,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    lx_api.h                                            PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.1          */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -42,6 +42,9 @@
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
 /*  05-19-2020     William E. Lamie         Initial Version 6.0           */
+/*  09-30-2020     William E. Lamie         Modified comment(s), and      */
+/*                                            updated product constants,  */
+/*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
 
@@ -57,6 +60,13 @@
 #ifndef LX_PARAMETER_NOT_USED
 #define LX_PARAMETER_NOT_USED(p) ((void)(p))
 #endif /* LX_PARAMETER_NOT_USED */
+
+
+/* Define basic constants for the LevelX Stack.  */
+#define AZURE_RTOS_LEVELX
+#define LEVELX_MAJOR_VERSION                        6
+#define LEVELX_MINOR_VERSION                        1
+#define LEVELX_PATCH_VERSION                        0
 
 
 /* Define general LevelX Constants.  */
