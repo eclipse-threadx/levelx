@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nor_flash_open                                  PORTABLE C      */ 
-/*                                                           6.1          */
+/*                                                           6.1.2        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -83,6 +83,9 @@
 /*  05-19-2020     William E. Lamie         Initial Version 6.0           */
 /*  09-30-2020     William E. Lamie         Modified comment(s),          */
 /*                                            resulting in version 6.1    */
+/*  11-09-2020     William E. Lamie         Modified comment(s),          */
+/*                                            fixed compiler warnings,    */
+/*                                            resulting in version 6.1.2  */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nor_flash_open(LX_NOR_FLASH  *nor_flash, CHAR *name, UINT (*nor_driver_initialize)(LX_NOR_FLASH *))
@@ -101,7 +104,7 @@ ULONG           used_sectors;
 ULONG           *new_map_entry;
 ULONG           *new_sector_address;
 ULONG           erased_count, min_erased_count, max_erased_count, temp_erased_count;
-ULONG           i, j, k;    
+ULONG           j, k, l;    
 UINT            status;
 #ifdef LX_FREE_SECTOR_DATA_VERIFY
 ULONG           *sector_word_ptr;
@@ -208,7 +211,7 @@ TX_INTERRUPT_SAVE_AREA
     block_word_ptr =  nor_flash -> lx_nor_flash_base_address;
     
     /* Loop through the blocks to determine the minimum and maximum erase count.  */
-    for (i = 0; i < nor_flash -> lx_nor_flash_total_blocks; i++)
+    for (l = 0; l < nor_flash -> lx_nor_flash_total_blocks; l++)
     {
     
         /* Pickup the first word of the block. If the flash manager has executed before, this word contains the
@@ -277,7 +280,7 @@ TX_INTERRUPT_SAVE_AREA
         block_word_ptr =  nor_flash -> lx_nor_flash_base_address;
     
         /* Loop through the blocks to setup the flash the fist time.  */
-        for (i = 0; i < nor_flash -> lx_nor_flash_total_blocks; i++)
+        for (l = 0; l < nor_flash -> lx_nor_flash_total_blocks; l++)
         {
 
             /* Setup the free bit map that corresponds to the free physical sectors in this
@@ -338,7 +341,7 @@ TX_INTERRUPT_SAVE_AREA
         block_word_ptr =  nor_flash -> lx_nor_flash_base_address;
     
         /* Loop through the blocks.  */
-        for (i = 0; i < nor_flash -> lx_nor_flash_total_blocks; i++)
+        for (l = 0; l < nor_flash -> lx_nor_flash_total_blocks; l++)
         {
          
             /* First, determine if this block has a valid erase count.  */
@@ -384,7 +387,7 @@ TX_INTERRUPT_SAVE_AREA
                 nor_flash -> lx_nor_flash_diagnostic_erased_block++;
 
                 /* Check to see if the block is erased. */
-                status =  (nor_flash -> lx_nor_flash_driver_block_erased_verify)(i);
+                status =  (nor_flash -> lx_nor_flash_driver_block_erased_verify)(l);
 
                 /* Is the block completely erased?  */
                 if (status != LX_SUCCESS)
@@ -406,7 +409,7 @@ TX_INTERRUPT_SAVE_AREA
                     nor_flash -> lx_nor_flash_diagnostic_re_erase_block++;
         
                     /* No, the block is not fully erased, erase it again.  */
-                    status =  _lx_nor_flash_driver_block_erase(nor_flash, i, max_erased_count);
+                    status =  _lx_nor_flash_driver_block_erase(nor_flash, l, max_erased_count);
                     
                     /* Check for an error from flash driver. Drivers should never return an error..  */
                     if (status)
@@ -511,7 +514,7 @@ TX_INTERRUPT_SAVE_AREA
                             {
                             
                                 /* Remember the block with free sectors.  */
-                                nor_flash -> lx_nor_flash_free_block_search =  i;
+                                nor_flash -> lx_nor_flash_free_block_search =  l;
                             }
                         }
                         

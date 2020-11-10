@@ -26,7 +26,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    lx_api.h                                            PORTABLE C      */
-/*                                                           6.1          */
+/*                                                           6.1.2        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -45,6 +45,10 @@
 /*  09-30-2020     William E. Lamie         Modified comment(s), and      */
 /*                                            updated product constants,  */
 /*                                            resulting in version 6.1    */
+/*  11-09-2020     William E. Lamie         Modified comment(s), and      */
+/*                                            added support for lx_user.h */
+/*                                            so user can specify values, */
+/*                                            resulting in version 6.1.2  */
 /*                                                                        */
 /**************************************************************************/
 
@@ -52,9 +56,31 @@
 #define LX_API_H
 
 
+/* Determine if a C++ compiler is being used.  If so, ensure that standard
+   C is used to process the API information.  */
+
+#ifdef __cplusplus
+
+/* Yes, C++ compiler is present.  Use standard C.  */
+extern   "C" {
+
+#endif
+
 /* Include necessary system files.  */
 
 #include "tx_api.h"
+
+/* Determine if the optional LevelX user define file should be used.  */
+
+#ifdef LX_INCLUDE_USER_DEFINE_FILE
+
+
+/* Yes, include the user defines in lx_user.h. The defines in this file may 
+   alternately be defined on the command line.  */
+
+#include "lx_user.h"
+#endif
+
 
 /* Disable warning of parameter not used. */
 #ifndef LX_PARAMETER_NOT_USED
@@ -66,7 +92,7 @@
 #define AZURE_RTOS_LEVELX
 #define LEVELX_MAJOR_VERSION                        6
 #define LEVELX_MINOR_VERSION                        1
-#define LEVELX_PATCH_VERSION                        0
+#define LEVELX_PATCH_VERSION                        2
 
 
 /* Define general LevelX Constants.  */
@@ -535,6 +561,11 @@ UINT    _lx_nor_flash_next_block_to_erase_find(LX_NOR_FLASH *nor_flash, ULONG *r
 UINT    _lx_nor_flash_physical_sector_allocate(LX_NOR_FLASH *nor_flash, ULONG logical_sector, ULONG **physical_sector_map_entry, ULONG **physical_sector_address);
 VOID    _lx_nor_flash_sector_mapping_cache_invalidate(LX_NOR_FLASH *nor_flash, ULONG logical_sector);
 VOID    _lx_nor_flash_system_error(LX_NOR_FLASH *nor_flash, UINT error_code);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif 
 
