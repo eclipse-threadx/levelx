@@ -751,7 +751,7 @@ TX_INTERRUPT_SAVE_AREA
                             /* Read the word directly.  */
                             sector_word =  *(sector_word_ptr);
 #else
-                            status =  _lx_nor_flash_driver_read((sector_word_ptr), &sector_word, 1);
+                            status =  _lx_nor_flash_driver_read(nor_flash, (sector_word_ptr), &sector_word, 1);
 
                             /* Check for an error from flash driver. Drivers should never return an error..  */
                             if (status)
