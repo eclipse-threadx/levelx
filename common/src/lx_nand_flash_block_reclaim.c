@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_block_reclaim                        PORTABLE C      */ 
-/*                                                           6.1.7        */
+/*                                                           6.1.8        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -88,6 +88,9 @@
 /*                                            resulting in version 6.1    */
 /*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
 /*                                            resulting in version 6.1.7  */
+/*  08-02-2021     Bhupendra Naphade        Modified comment(s), updated  */
+/*                                            obselete page count check,  */
+/*                                            resulting in version 6.1.8  */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_block_reclaim(LX_NAND_FLASH *nand_flash)
@@ -131,7 +134,7 @@ UINT                    status;
     }
 
     /* Determine if this block is completely obsolete.  */
-    if (obsolete_pages == nand_flash -> lx_nand_flash_pages_per_block)
+    if (obsolete_pages == nand_flash -> lx_nand_flash_pages_per_block - 1)
     {
 
         /* Read page 0 of the block, which has the erase count in the first 4 bytes. */
