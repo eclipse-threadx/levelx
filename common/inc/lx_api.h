@@ -26,7 +26,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    lx_api.h                                            PORTABLE C      */
-/*                                                           6.1.9        */
+/*                                                           6.1.10       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -62,6 +62,10 @@
 /*                                            updated configuration for   */
 /*                                            nand flash                  */
 /*                                            resulting in version 6.1.9  */
+/*  01-31-2022     Bhupendra Naphade        Modified comment(s),          */
+/*                                            updated include order for   */
+/*                                            standalone mode,            */
+/*                                            resulting in version 6.1.10 */
 /*                                                                        */
 /**************************************************************************/
 
@@ -79,12 +83,6 @@ extern   "C" {
 
 #endif
 
-/* Include necessary system files.  */
-
-#ifndef LX_STANDALONE_ENABLE
-#include "tx_api.h"
-#endif
-
 /* Determine if the optional LevelX user define file should be used.  */
 
 #ifdef LX_INCLUDE_USER_DEFINE_FILE
@@ -94,6 +92,12 @@ extern   "C" {
    alternately be defined on the command line.  */
 
 #include "lx_user.h"
+#endif
+
+/* Include the ThreadX api file.  */
+
+#ifndef LX_STANDALONE_ENABLE
+#include "tx_api.h"
 #endif
 
 
@@ -166,7 +170,7 @@ typedef unsigned long long                      ULONG64;
 #define AZURE_RTOS_LEVELX
 #define LEVELX_MAJOR_VERSION                        6
 #define LEVELX_MINOR_VERSION                        1
-#define LEVELX_PATCH_VERSION                        9
+#define LEVELX_PATCH_VERSION                        10
 
 
 /* Define general LevelX Constants.  */
