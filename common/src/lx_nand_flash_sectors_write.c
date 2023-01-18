@@ -39,61 +39,66 @@
 /*                                                                        */ 
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
-/*    _lx_nand_flash_driver_block_status_set              PORTABLE C      */ 
+/*    _lx_nand_flash_sectors_write                        PORTABLE C      */ 
 /*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
-/*    William E. Lamie, Microsoft Corporation                             */
+/*    Xiuwen Cai, Microsoft Corporation                                   */
 /*                                                                        */
 /*  DESCRIPTION                                                           */ 
 /*                                                                        */ 
-/*    This function calls the driver to set the block status and          */ 
-/*    updates the internal cache.                                         */ 
+/*    This function writes multiple logical sectors to the NAND flash.    */ 
 /*                                                                        */ 
 /*  INPUT                                                                 */ 
 /*                                                                        */ 
 /*    nand_flash                            NAND flash instance           */ 
-/*    block                                 Block number                  */ 
-/*    bad_block_flag                        Bad block flag                */ 
+/*    logical_sector                        Logical sector number         */ 
+/*    buffer                                Pointer to buffer to write    */ 
+/*                                            (the size is number of      */ 
+/*                                             bytes in a page)           */ 
+/*    sector_count                          Number of sector to write     */
 /*                                                                        */ 
 /*  OUTPUT                                                                */ 
 /*                                                                        */ 
-/*    Completion Status                                                   */ 
+/*    return status                                                       */ 
 /*                                                                        */ 
 /*  CALLS                                                                 */ 
 /*                                                                        */ 
-/*    (lx_nand_flash_driver_block_status_set)                             */ 
-/*                                          NAND flash block status set   */ 
+/*    _lx_nand_flash_sector_write           Write one sector              */ 
 /*                                                                        */ 
 /*  CALLED BY                                                             */ 
 /*                                                                        */ 
-/*    Internal LevelX                                                     */ 
+/*    Application Code                                                    */ 
 /*                                                                        */ 
 /*  RELEASE HISTORY                                                       */ 
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     William E. Lamie         Initial Version 6.0           */
-/*  09-30-2020     William E. Lamie         Modified comment(s),          */
-/*                                            resulting in version 6.1    */
-/*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
-/*                                            resulting in version 6.1.7  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
-/*                                            removed cache support,      */
-/*                                            resulting in version 6.x    */
+/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-UINT  _lx_nand_flash_driver_block_status_set(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR bad_block_flag)
+UINT  _lx_nand_flash_sectors_write(LX_NAND_FLASH *nand_flash, ULONG logical_sector, VOID *buffer, ULONG sector_count)
 {
 
-UINT    status;
+UINT status = LX_SUCCESS;
+UINT i;
 
 
-    /* Increment the block status set count.  */
-    nand_flash -> lx_nand_flash_diagnostic_block_status_sets++;
+    /* Loop to write all the sectors.  */
+    for (i = 0; i < sector_count; i++)
+    {
 
-    /* Call driver block status set function.  */
-    status =  (nand_flash -> lx_nand_flash_driver_block_status_set)(block, bad_block_flag);
+        /* Write one sector.  */
+        status = _lx_nand_flash_sector_write(nand_flash, logical_sector + i, ((UCHAR*)buffer) + i * nand_flash -> lx_nand_flash_bytes_per_page);
+        
+        /* Check return status.  */
+        if (status)
+        {
+
+            /* Error, break the loop.  */
+            break;
+        }
+    }
 
     /* Return status.  */
     return(status);

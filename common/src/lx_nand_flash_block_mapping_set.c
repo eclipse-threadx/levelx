@@ -39,31 +39,29 @@
 /*                                                                        */ 
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
-/*    _lx_nand_flash_driver_block_status_set              PORTABLE C      */ 
+/*    _lx_nand_flash_block_mapping_set                    PORTABLE C      */ 
 /*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
-/*    William E. Lamie, Microsoft Corporation                             */
+/*    Xiuwen Cai, Microsoft Corporation                                   */
 /*                                                                        */
 /*  DESCRIPTION                                                           */ 
 /*                                                                        */ 
-/*    This function calls the driver to set the block status and          */ 
-/*    updates the internal cache.                                         */ 
+/*    This function sets block mappings.                                  */ 
 /*                                                                        */ 
 /*  INPUT                                                                 */ 
 /*                                                                        */ 
 /*    nand_flash                            NAND flash instance           */ 
+/*    logical_sector                        Logical sector number         */ 
 /*    block                                 Block number                  */ 
-/*    bad_block_flag                        Bad block flag                */ 
 /*                                                                        */ 
 /*  OUTPUT                                                                */ 
 /*                                                                        */ 
-/*    Completion Status                                                   */ 
+/*    return status                                                       */ 
 /*                                                                        */ 
 /*  CALLS                                                                 */ 
 /*                                                                        */ 
-/*    (lx_nand_flash_driver_block_status_set)                             */ 
-/*                                          NAND flash block status set   */ 
+/*    _lx_nand_flash_metadata_write         Write metadata                */ 
 /*                                                                        */ 
 /*  CALLED BY                                                             */ 
 /*                                                                        */ 
@@ -73,30 +71,40 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     William E. Lamie         Initial Version 6.0           */
-/*  09-30-2020     William E. Lamie         Modified comment(s),          */
-/*                                            resulting in version 6.1    */
-/*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
-/*                                            resulting in version 6.1.7  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
-/*                                            removed cache support,      */
-/*                                            resulting in version 6.x    */
+/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-UINT  _lx_nand_flash_driver_block_status_set(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR bad_block_flag)
+UINT  _lx_nand_flash_block_mapping_set(LX_NAND_FLASH *nand_flash, ULONG logical_sector, ULONG block)
 {
 
+UINT    block_mapping_index;
+UCHAR   page_number;
 UINT    status;
 
 
-    /* Increment the block status set count.  */
-    nand_flash -> lx_nand_flash_diagnostic_block_status_sets++;
+    /* Get the mapping index from logic sector address.  */
+    block_mapping_index = logical_sector / nand_flash -> lx_nand_flash_pages_per_block;
 
-    /* Call driver block status set function.  */
-    status =  (nand_flash -> lx_nand_flash_driver_block_status_set)(block, bad_block_flag);
+    /* Check the address range.  */
+    if (block_mapping_index > nand_flash -> lx_nand_flash_block_mapping_table_size / sizeof(*nand_flash -> lx_nand_flash_block_mapping_table))
+    {
+
+        /* Out of range, return an error. */
+        return(LX_ERROR);
+    }
+
+    /* Save the block number to mapping table.  */
+    nand_flash -> lx_nand_flash_block_mapping_table[block_mapping_index] = (USHORT)block;
+
+    /* Get the page number to write.  */
+    page_number = (UCHAR)(block_mapping_index * sizeof(*nand_flash -> lx_nand_flash_block_mapping_table) / nand_flash -> lx_nand_flash_bytes_per_page);
+
+    /* Save the mapping table.  */
+    status = _lx_nand_flash_metadata_write(nand_flash, ((UCHAR*)nand_flash -> lx_nand_flash_block_mapping_table) + 
+                                                page_number * nand_flash -> lx_nand_flash_bytes_per_page, 
+                                                LX_NAND_PAGE_TYPE_BLOCK_MAPPING_TABLE | page_number);
 
     /* Return status.  */
     return(status);
 }
-
 

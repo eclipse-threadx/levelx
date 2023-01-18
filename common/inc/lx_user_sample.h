@@ -26,7 +26,7 @@
 /*  PORT SPECIFIC C INFORMATION                            RELEASE        */
 /*                                                                        */
 /*    lx_user.h                                           PORTABLE C      */
-/*                                                           6.1.7        */
+/*                                                           6.x          */
 /*                                                                        */
 /*  AUTHOR                                                                */
 /*                                                                        */
@@ -48,6 +48,9 @@
 /*  06-02-2021     Bhupendra Naphade        Modified comment(s), and      */
 /*                                            added standalone support,   */
 /*                                            resulting in version 6.1.7  */
+/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s), and      */
+/*                                            added new NAND options,     */
+/*                                            resulting in version 6.x    */
 /*                                                                        */
 /**************************************************************************/
 
@@ -71,22 +74,12 @@
 #define LX_FREE_SECTOR_DATA_VERIFY 
 */
 
-/* By default this value is 128 and defines the logical sector mapping cache size. 
-   Large values improve performance, but cost memory. The minimum size is 8 and 
-   all values must be a power of 2.
+/* By default this value is 4, which represents a maximum of 4 blocks that 
+   can be allocated for metadata.
 */
 /*
-#define LX_NAND_SECTOR_MAPPING_CACHE_SIZE   128
+#define LX_NAND_FLASH_MAX_METADATA_BLOCKS 4
 */
-
-/* Defined, this creates a direct mapping cache, such that there are no cache misses. 
-   It also requires that LX_NAND_SECTOR_MAPPING_CACHE_SIZE represents the exact number 
-   of total pages in your flash device. 
-*/
-/* 
-#define LX_NAND_FLASH_DIRECT_MAPPING_CACHE
-*/
-
 
 /* Defined, this disabled the extended NOR cache.  */
 /*

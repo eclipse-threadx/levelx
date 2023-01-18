@@ -39,31 +39,32 @@
 /*                                                                        */ 
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
-/*    _lx_nand_flash_driver_block_status_set              PORTABLE C      */ 
+/*    _lx_nand_flash_metadata_write                       PORTABLE C      */ 
 /*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
-/*    William E. Lamie, Microsoft Corporation                             */
+/*    Xiuwen Cai, Microsoft Corporation                                   */
 /*                                                                        */
 /*  DESCRIPTION                                                           */ 
 /*                                                                        */ 
-/*    This function calls the driver to set the block status and          */ 
-/*    updates the internal cache.                                         */ 
+/*    This function writes metadata pages into current metadata block and */ 
+/*    allocates new blocks for metadata.                                  */ 
 /*                                                                        */ 
 /*  INPUT                                                                 */ 
 /*                                                                        */ 
 /*    nand_flash                            NAND flash instance           */ 
-/*    block                                 Block number                  */ 
-/*    bad_block_flag                        Bad block flag                */ 
+/*    main_buffer                           Main page buffer              */ 
+/*    spare_value                           Value for spare bytes         */ 
 /*                                                                        */ 
 /*  OUTPUT                                                                */ 
 /*                                                                        */ 
-/*    Completion Status                                                   */ 
+/*    return status                                                       */ 
 /*                                                                        */ 
 /*  CALLS                                                                 */ 
 /*                                                                        */ 
-/*    (lx_nand_flash_driver_block_status_set)                             */ 
-/*                                          NAND flash block status set   */ 
+/*    lx_nand_flash_driver_pages_write      Driver pages write            */ 
+/*    _lx_nand_flash_metadata_allocate      Allocate blocks for metadata  */ 
+/*    _lx_nand_flash_system_error           Internal system error handler */ 
 /*                                                                        */ 
 /*  CALLED BY                                                             */ 
 /*                                                                        */ 
@@ -73,30 +74,85 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     William E. Lamie         Initial Version 6.0           */
-/*  09-30-2020     William E. Lamie         Modified comment(s),          */
-/*                                            resulting in version 6.1    */
-/*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
-/*                                            resulting in version 6.1.7  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
-/*                                            removed cache support,      */
-/*                                            resulting in version 6.x    */
+/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-UINT  _lx_nand_flash_driver_block_status_set(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR bad_block_flag)
+UINT  _lx_nand_flash_metadata_write(LX_NAND_FLASH *nand_flash, UCHAR* main_buffer, ULONG spare_value)
 {
 
+ULONG   block;
+ULONG   page;
 UINT    status;
+UCHAR   *spare_buffer_ptr;
 
 
-    /* Increment the block status set count.  */
-    nand_flash -> lx_nand_flash_diagnostic_block_status_sets++;
+    /* Setup spare buffer pointer.  */
+    spare_buffer_ptr = nand_flash -> lx_nand_flash_page_buffer + nand_flash -> lx_nand_flash_bytes_per_page;
 
-    /* Call driver block status set function.  */
-    status =  (nand_flash -> lx_nand_flash_driver_block_status_set)(block, bad_block_flag);
+    /* Initialize the spare buffer.  */
+    LX_MEMSET(spare_buffer_ptr, 0xFF, nand_flash -> lx_nand_flash_spare_total_length);
 
-    /* Return status.  */
+    /* Check if there is enough spare data for metadata block number.  */
+    if (nand_flash -> lx_nand_flash_spare_data2_length >= 2)
+    {
+
+        /* Save metadata block number in spare bytes.  */
+        LX_UTILITY_SHORT_SET(&spare_buffer_ptr[nand_flash -> lx_nand_flash_spare_data2_offset], nand_flash -> lx_nand_flash_metadata_block_number);
+    }
+
+    /* Save metadata type data in spare bytes.  */
+    LX_UTILITY_LONG_SET(&spare_buffer_ptr[nand_flash -> lx_nand_flash_spare_data1_offset], spare_value);
+
+    /* Get current metadata block number. */
+    block = nand_flash -> lx_nand_flash_metadata_block_number_current;
+
+    /* Get current metadata page number. */
+    page = nand_flash -> lx_nand_flash_metadata_block_current_page;
+
+    /* Write the page.  */
+    status = (nand_flash -> lx_nand_flash_driver_pages_write)(block, page, main_buffer, spare_buffer_ptr, 1);
+
+    /* Check for an error from flash driver.   */    
+    if (status)
+    {
+
+        /* Call system error handler.  */
+        _lx_nand_flash_system_error(nand_flash, status, block, 0);
+
+        /* Return an error.  */
+        return(status);
+    }
+
+    /* Increase current page for metadata block.  */
+    nand_flash -> lx_nand_flash_metadata_block_current_page++;
+
+    /* Get current backup metadata block number. */
+    block = nand_flash -> lx_nand_flash_backup_metadata_block_number_current;
+
+    /* Get current backup metadata page number. */
+    page = nand_flash -> lx_nand_flash_backup_metadata_block_current_page;
+
+    /* Write the page.  */
+    status = (nand_flash -> lx_nand_flash_driver_pages_write)(block, page, main_buffer, spare_buffer_ptr, 1);
+
+    /* Check for an error from flash driver.   */
+    if (status)
+    {
+
+        /* Call system error handler.  */
+        _lx_nand_flash_system_error(nand_flash, status, block, 0);
+
+        /* Return an error.  */
+        return(status);
+    }
+
+    /* Increase current page for backup metadata block.  */
+    nand_flash -> lx_nand_flash_backup_metadata_block_current_page++;
+
+    /* Allocate new block for metadata if necessary.  */
+    _lx_nand_flash_metadata_allocate(nand_flash);
+
+    /* Return sector not found status.  */
     return(status);
 }
-
 

@@ -39,32 +39,29 @@
 /*                                                                        */ 
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
-/*    _lx_nand_flash_driver_extra_bytes_get               PORTABLE C      */ 
-/*                                                           6.1.7        */
+/*    _lx_nand_flash_mapped_block_list_get                PORTABLE C      */ 
+/*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
-/*    William E. Lamie, Microsoft Corporation                             */
+/*    Xiuwen Cai, Microsoft Corporation                                   */
 /*                                                                        */
 /*  DESCRIPTION                                                           */ 
 /*                                                                        */ 
-/*    This function calls the driver to get the extra bytes of a NAND     */ 
-/*    page.                                                               */ 
+/*    This function gets a block from mapped block list and removes it    */ 
+/*    from the list.                                                      */ 
 /*                                                                        */ 
 /*  INPUT                                                                 */ 
 /*                                                                        */ 
 /*    nand_flash                            NAND flash instance           */ 
-/*    block                                 Block number                  */ 
-/*    page                                  Page number                   */ 
-/*    destination                           Pointer to destination buffer */ 
-/*    words                                 Number of words to read       */ 
+/*    block_mapping_index                   Pointer to block mapping index*/ 
 /*                                                                        */ 
 /*  OUTPUT                                                                */ 
 /*                                                                        */ 
-/*    Completion Status                                                   */ 
+/*    return status                                                       */ 
 /*                                                                        */ 
 /*  CALLS                                                                 */ 
 /*                                                                        */ 
-/*    (lx_nand_flash_driver_extra_bytes_get)Get extra bytes from spare    */ 
+/*    None                                                                */ 
 /*                                                                        */ 
 /*  CALLED BY                                                             */ 
 /*                                                                        */ 
@@ -74,79 +71,28 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     William E. Lamie         Initial Version 6.0           */
-/*  09-30-2020     William E. Lamie         Modified comment(s),          */
-/*                                            resulting in version 6.1    */
-/*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
-/*                                            resulting in version 6.1.7  */
+/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-UINT  _lx_nand_flash_driver_extra_bytes_get(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR *destination, UINT size)
+UINT  _lx_nand_flash_mapped_block_list_get(LX_NAND_FLASH* nand_flash, ULONG *block_mapping_index)
 {
 
-ULONG                   *source_ptr;
-ULONG                   *destination_ptr;
-ULONG                   cache_index;
-UINT                    status;
 
-
-    /* Determine if the page extra bytes cache is disabled.  */
-    if (nand_flash -> lx_nand_flash_page_extra_bytes_cache == LX_NULL)
+    /* Check if the mapped block list is empty.  */
+    if (nand_flash -> lx_nand_flash_mapped_block_list_head == nand_flash -> lx_nand_flash_block_list_size - 1)
     {
 
-        /* Increment the page extra bytes get count.  */
-        nand_flash -> lx_nand_flash_diagnostic_page_extra_bytes_gets++;
-
-        /* Call driver extra bytes get function.  */
-        status =  (nand_flash -> lx_nand_flash_driver_extra_bytes_get)(block, page, destination, size);
+        /* Empty list, return error.  */
+        return(LX_NO_BLOCKS);
     }
-    else
-    {
-    
-        /* Calculate the cache index.  */
-        cache_index =  (block * nand_flash -> lx_nand_flash_pages_per_block) + page;
 
-        /* Setup the destination pointer.  */
-        destination_ptr =  (ULONG *) destination;
-        
-        /* Determine if this cache entry is valid.  */
-        if (nand_flash -> lx_nand_flash_page_extra_bytes_cache[cache_index].lx_nand_page_extra_info_logical_sector != 0)
-        {
-    
-            /* Simply return this value.  */
-            *destination_ptr =  nand_flash -> lx_nand_flash_page_extra_bytes_cache[cache_index].lx_nand_page_extra_info_logical_sector;
-        
-            /* Increment the number of page extra bytes cache hits.  */
-            nand_flash -> lx_nand_flash_diagnostic_page_extra_bytes_cache_hits++;
-        
-            /* Return successful status.  */
-            status =  LX_SUCCESS;
-        }
-        else
-        {
-        
-            /* Increment the page extra bytes get count.  */
-            nand_flash -> lx_nand_flash_diagnostic_page_extra_bytes_gets++;
+    /* Remove one block from the list.  */
+    nand_flash -> lx_nand_flash_mapped_block_list_head++;
 
-            /* Call driver extra bytes get function.  */
-            status =  (nand_flash -> lx_nand_flash_driver_extra_bytes_get)(block, page, destination, size);
+    /* Return the block number.  */
+    *block_mapping_index = nand_flash -> lx_nand_flash_block_list[nand_flash -> lx_nand_flash_mapped_block_list_head];
 
-            /* Increment the number of page extra bytes cache misses.  */
-            nand_flash -> lx_nand_flash_diagnostic_page_extra_bytes_cache_misses++;
-
-            /* Setup destination pointer.  */
-            destination_ptr =  &nand_flash -> lx_nand_flash_page_extra_bytes_cache[cache_index].lx_nand_page_extra_info_logical_sector;
-    
-            /* Setup source pointer.  */
-            source_ptr =  (ULONG *) destination;
-        
-            /* Save the value in the page extra bytes cache.  */
-            *destination_ptr =  *source_ptr;
-        }
-    }
-    
-    /* Return status.  */
-    return(status);
+    /* Return successful completion.  */
+    return(LX_SUCCESS);
 }
-
 

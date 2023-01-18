@@ -27,15 +27,21 @@
 
 /* Define constants for the NAND flash simulation. */
 
-#define TOTAL_BLOCKS                        8
-#define PHYSICAL_PAGES_PER_BLOCK            16          /* Min value of 2                                               */
-#define BYTES_PER_PHYSICAL_PAGE             2048        /* 2048 bytes per page                                          */ 
-#define WORDS_PER_PHYSICAL_PAGE             2048/4      /* Words per page                                               */ 
-#define SPARE_BYTES_PER_PAGE                64          /* 64 "spare" bytes per page                                    */
+#define TOTAL_BLOCKS                        1024
+#define PHYSICAL_PAGES_PER_BLOCK            256         /* Min value of 2                                               */
+#define BYTES_PER_PHYSICAL_PAGE             512         /* 512 bytes per page                                           */ 
+#define WORDS_PER_PHYSICAL_PAGE             512 / 4     /* Words per page                                               */ 
+#define SPARE_BYTES_PER_PAGE                16          /* 16 "spare" bytes per page                                    */
                                                         /* For 2048 byte block spare area:                              */ 
 #define BAD_BLOCK_POSITION                  0           /*      0 is the bad block byte postion                         */ 
-#define EXTRA_BYTE_POSITION                 2           /*      2 is the extra bytes starting byte postion              */ 
-#define ECC_BYTE_POSITION                   40          /*      40 is the ECC starting byte position                    */ 
+#define EXTRA_BYTE_POSITION                 0           /*      0 is the extra bytes starting byte postion              */ 
+#define ECC_BYTE_POSITION                   8           /*      8 is the ECC starting byte position                     */ 
+#define SPARE_DATA1_OFFSET                  4
+#define SPARE_DATA1_LENGTH                  4
+#define SPARE_DATA2_OFFSET                  2
+#define SPARE_DATA2_LENGTH                  2
+
+
 
 /* Definition of the spare area is relative to the block size of the NAND part and perhaps manufactures of the NAND part. 
    Here are some common definitions:
@@ -111,7 +117,10 @@ UINT  _lx_nand_flash_simulator_extra_bytes_get(ULONG block, ULONG page, UCHAR *d
 UINT  _lx_nand_flash_simulator_extra_bytes_set(ULONG block, ULONG page, UCHAR *source, UINT size);
 UINT  _lx_nand_flash_simulator_system_error(UINT error_code, ULONG block, ULONG page);
 
-
+UINT  _lx_nand_flash_simulator_pages_read(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
+UINT  _lx_nand_flash_simulator_pages_write(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
+UINT  _lx_nand_flash_simulator_pages_copy(ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR* data_buffer);
+UINT  _lx_nand_flash_simulator_page_ecc_check(ULONG block, ULONG page);
 
 UINT  _lx_nand_flash_simulator_initialize(LX_NAND_FLASH *nand_flash)
 {
@@ -136,19 +145,69 @@ UINT  _lx_nand_flash_simulator_initialize(LX_NAND_FLASH *nand_flash)
     nand_flash -> lx_nand_flash_driver_extra_bytes_set =        _lx_nand_flash_simulator_extra_bytes_set;
     nand_flash -> lx_nand_flash_driver_system_error =           _lx_nand_flash_simulator_system_error;
 
-    /* Setup local buffer for NAND flash operation. This buffer must be the page size of the NAND flash memory.  */
-    nand_flash -> lx_nand_flash_page_buffer =  &nand_flash_simulator_buffer[0];
+    nand_flash -> lx_nand_flash_driver_pages_read =             _lx_nand_flash_simulator_pages_read;
+    nand_flash -> lx_nand_flash_driver_pages_write =            _lx_nand_flash_simulator_pages_write;
+    nand_flash -> lx_nand_flash_driver_pages_copy =             _lx_nand_flash_simulator_pages_copy;
+
+    nand_flash -> lx_nand_flash_spare_data1_offset =            SPARE_DATA1_OFFSET;
+    nand_flash -> lx_nand_flash_spare_data1_length =            SPARE_DATA1_LENGTH;
+
+    nand_flash -> lx_nand_flash_spare_data2_offset =            SPARE_DATA2_OFFSET;
+    nand_flash -> lx_nand_flash_spare_data2_length =            SPARE_DATA2_LENGTH;
+
+    nand_flash -> lx_nand_flash_spare_total_length =            SPARE_BYTES_PER_PAGE;
 
     /* Return success.  */
     return(LX_SUCCESS);
 }
+UINT _lx_nand_flash_simulator_page_ecc_check(ULONG block, ULONG page)
+{
 
+UINT    i;
+INT     ecc_pos = 0;
+UINT    ecc_status = LX_SUCCESS;
+UINT    status;
+
+
+    for (i = 0; i < BYTES_PER_PHYSICAL_PAGE; i += 256)
+    {
+        status = lx_nand_flash_256byte_ecc_check((UCHAR*)&nand_memory_area[block].physical_pages[page].memory[i / sizeof(ULONG)],
+            &nand_memory_area[block].physical_pages[page].spare[ECC_BYTE_POSITION + ecc_pos]);
+
+        if (status == LX_NAND_ERROR_NOT_CORRECTED)
+        {
+            ecc_status = LX_NAND_ERROR_NOT_CORRECTED;
+            break;
+        }
+        else if (status == LX_NAND_ERROR_CORRECTED)
+        {
+            ecc_status = LX_NAND_ERROR_CORRECTED;
+        }
+
+        ecc_pos += 3;
+    }
+
+    if (ecc_status == LX_NAND_ERROR_CORRECTED)
+    {
+
+        return(LX_ERROR);
+    }
+    else if (ecc_status == LX_NAND_ERROR_NOT_CORRECTED)
+    {
+
+        return(LX_ERROR);
+    }
+    return ecc_status;
+}
 
 UINT  _lx_nand_flash_simulator_read(ULONG block, ULONG page, ULONG *destination, ULONG words)
 {
 
 ULONG   *flash_address;
+UINT    status;
 
+
+    status = _lx_nand_flash_simulator_page_ecc_check(block, page);
 
     /* Pickup the flash address.  */
     flash_address =  &(nand_memory_area[block].physical_pages[page].memory[0]);
@@ -160,9 +219,39 @@ ULONG   *flash_address;
         *destination++ =  *flash_address++;
     }
 
-    return(LX_SUCCESS);
+    return(status);
 }
 
+
+UINT  _lx_nand_flash_simulator_pages_read(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages)
+{
+
+UINT    i;
+UINT    status;
+UINT    ecc_status = LX_SUCCESS;
+
+
+    for (i = 0; i < pages; i++)
+    {
+        if (main_buffer)
+        {
+
+            status = _lx_nand_flash_simulator_read(block, page + i, (ULONG*)(main_buffer + i * BYTES_PER_PHYSICAL_PAGE), WORDS_PER_PHYSICAL_PAGE);
+            if (status == LX_NAND_ERROR_CORRECTED)
+            {
+                ecc_status = LX_NAND_ERROR_CORRECTED;
+            }
+            else if (status == LX_NAND_ERROR_NOT_CORRECTED)
+            {
+                ecc_status = LX_ERROR;
+                break;
+            }
+        }
+
+        status = _lx_nand_flash_simulator_extra_bytes_get(block, page + i, spare_buffer + i * SPARE_BYTES_PER_PAGE, SPARE_BYTES_PER_PAGE);
+    }    
+    return (ecc_status);
+}
 
 UINT  _lx_nand_flash_simulator_write(ULONG block, ULONG page, ULONG *source, ULONG words)
 {
@@ -180,7 +269,7 @@ ULONG   *page_ptr = &(nand_memory_area[block].physical_pages[page].memory[0]);
     nand_block_diag[block].page_writes[page]++;
     if (nand_block_diag[block].page_writes[page] > nand_block_diag[block].max_page_writes[page])
         nand_block_diag[block].max_page_writes[page] =  nand_block_diag[block].page_writes[page];
-  
+
     /* Pickup the flash address.  */
     flash_address =  &(nand_memory_area[block].physical_pages[page].memory[0]);
 
@@ -210,7 +299,7 @@ ULONG   *page_ptr = &(nand_memory_area[block].physical_pages[page].memory[0]);
         bytes_computed =  bytes_computed + 256;
         
         /* Move the page buffer forward.  */
-        page_ptr =  page_ptr + 256;
+        page_ptr =  page_ptr + 64;
     
         ecc_bytes = ecc_bytes + 3;
 
@@ -233,6 +322,51 @@ ULONG   *page_ptr = &(nand_memory_area[block].physical_pages[page].memory[0]);
 
     }
     return(LX_SUCCESS);
+}
+
+UINT  _lx_nand_flash_simulator_pages_write(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages)
+{
+
+UINT    i;
+UINT    status = LX_SUCCESS;
+
+
+    for (i = 0; i < pages; i++)
+    {
+        _lx_nand_flash_simulator_extra_bytes_set(block, page + i, spare_buffer + i * SPARE_BYTES_PER_PAGE, SPARE_BYTES_PER_PAGE);
+        status = _lx_nand_flash_simulator_write(block, page + i, (ULONG*)(main_buffer + i * BYTES_PER_PHYSICAL_PAGE), WORDS_PER_PHYSICAL_PAGE);
+        if (status == LX_INVALID_WRITE)
+        {
+            break;
+        }
+
+    }
+    return (status);
+}
+
+
+UINT  _lx_nand_flash_simulator_pages_copy(ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR *data_buffer)
+{
+    UINT    i;
+    UINT    status = LX_SUCCESS;
+
+
+    for (i = 0; i < pages; i++)
+    {
+        status = _lx_nand_flash_simulator_pages_read(source_block, source_page + i, data_buffer, data_buffer + BYTES_PER_PHYSICAL_PAGE, 1);
+        if (status != LX_SUCCESS && status != LX_NAND_ERROR_CORRECTED)
+        {
+            break;
+        }
+        _lx_nand_flash_simulator_pages_write(destination_block, destination_page + i, data_buffer, data_buffer + BYTES_PER_PHYSICAL_PAGE, 1);
+        if (status != LX_SUCCESS)
+        {
+            break;
+        }
+
+    }
+    return (status);
+
 }
 
 UINT  _lx_nand_flash_simulator_block_erase(ULONG block, ULONG erase_count)

@@ -39,31 +39,35 @@
 /*                                                                        */ 
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
-/*    _lx_nand_flash_driver_block_status_set              PORTABLE C      */ 
+/*    _lx_nand_flash_block_find                           PORTABLE C      */ 
 /*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
-/*    William E. Lamie, Microsoft Corporation                             */
+/*    Xiuwen Cai, Microsoft Corporation                                   */
 /*                                                                        */
 /*  DESCRIPTION                                                           */ 
 /*                                                                        */ 
-/*    This function calls the driver to set the block status and          */ 
-/*    updates the internal cache.                                         */ 
+/*    This function attempts to find the mapped block for the logical     */ 
+/*    sector in the mapping table.                                        */ 
 /*                                                                        */ 
 /*  INPUT                                                                 */ 
 /*                                                                        */ 
 /*    nand_flash                            NAND flash instance           */ 
-/*    block                                 Block number                  */ 
-/*    bad_block_flag                        Bad block flag                */ 
+/*    logical_sector                        Logical sector number         */ 
+/*    superceded_check                      Check for page being          */ 
+/*                                            superceded (can happen if   */ 
+/*                                            on interruptions of page    */ 
+/*                                            write)                      */ 
+/*    block                                 Destination for block         */ 
+/*    page                                  Destination for page          */ 
 /*                                                                        */ 
 /*  OUTPUT                                                                */ 
 /*                                                                        */ 
-/*    Completion Status                                                   */ 
+/*    return status                                                       */ 
 /*                                                                        */ 
 /*  CALLS                                                                 */ 
 /*                                                                        */ 
-/*    (lx_nand_flash_driver_block_status_set)                             */ 
-/*                                          NAND flash block status set   */ 
+/*    None                                                                */ 
 /*                                                                        */ 
 /*  CALLED BY                                                             */ 
 /*                                                                        */ 
@@ -73,30 +77,42 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     William E. Lamie         Initial Version 6.0           */
-/*  09-30-2020     William E. Lamie         Modified comment(s),          */
-/*                                            resulting in version 6.1    */
-/*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
-/*                                            resulting in version 6.1.7  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
-/*                                            removed cache support,      */
-/*                                            resulting in version 6.x    */
+/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-UINT  _lx_nand_flash_driver_block_status_set(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR bad_block_flag)
+UINT  _lx_nand_flash_block_find(LX_NAND_FLASH *nand_flash, ULONG logical_sector, ULONG *block, USHORT *block_status)
 {
 
-UINT    status;
+ UINT    block_mapping_index;
+ USHORT  block_number;
 
 
-    /* Increment the block status set count.  */
-    nand_flash -> lx_nand_flash_diagnostic_block_status_sets++;
+    /* Get the mapping index from logic sector address.  */
+    block_mapping_index = logical_sector / nand_flash -> lx_nand_flash_pages_per_block;
 
-    /* Call driver block status set function.  */
-    status =  (nand_flash -> lx_nand_flash_driver_block_status_set)(block, bad_block_flag);
+    /* Check the address range.  */
+    if (block_mapping_index > nand_flash -> lx_nand_flash_block_mapping_table_size / sizeof(*nand_flash -> lx_nand_flash_block_mapping_table))
+    {
 
-    /* Return status.  */
-    return(status);
+        /* Out of range, return an error. */
+        return(LX_ERROR);
+    }
+
+    /* Get the block number from mapping table.  */
+    block_number = nand_flash -> lx_nand_flash_block_mapping_table[block_mapping_index];
+
+    /* Check if it is mapped.  */
+    if (block_number != LX_NAND_BLOCK_UNMAPPED)
+    {
+
+        /* Return the block status.  */
+        *block_status = nand_flash -> lx_nand_flash_block_status_table[block_number];
+    }
+
+    /* Return the block number.  */
+    *block = (ULONG)block_number;
+
+    /* Return successful completion.  */
+    return(LX_SUCCESS);
 }
-
 

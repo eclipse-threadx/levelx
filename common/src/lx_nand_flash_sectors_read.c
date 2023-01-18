@@ -39,79 +39,68 @@
 /*                                                                        */ 
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
-/*    _lx_nand_flash_driver_extra_bytes_set               PORTABLE C      */ 
-/*                                                           6.1.7        */
+/*    _lx_nand_flash_sectors_read                         PORTABLE C      */ 
+/*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
-/*    William E. Lamie, Microsoft Corporation                             */
+/*    Xiuwen Cai, Microsoft Corporation                                   */
 /*                                                                        */
 /*  DESCRIPTION                                                           */ 
 /*                                                                        */ 
-/*    This function calls the driver extra bytes set operation and        */ 
-/*    updates the internal cache.                                         */ 
+/*    This function reads multiple logical sectors from NAND flash.       */ 
 /*                                                                        */ 
 /*  INPUT                                                                 */ 
 /*                                                                        */ 
 /*    nand_flash                            NAND flash instance           */ 
-/*    block                                 Block number                  */ 
-/*    page                                  Page number                   */  
-/*    source                                Pointer to source extra bytes */ 
-/*    size                                  Number of extra bytes         */ 
+/*    logical_sector                        Logical sector number         */ 
+/*    buffer                                Pointer to buffer to read into*/ 
+/*                                            (the size is number of      */ 
+/*                                             bytes in a page)           */ 
+/*    sector_count                          Number of sector to read      */
 /*                                                                        */ 
 /*  OUTPUT                                                                */ 
 /*                                                                        */ 
-/*    Completion Status                                                   */ 
+/*    return status                                                       */ 
 /*                                                                        */ 
 /*  CALLS                                                                 */ 
 /*                                                                        */ 
-/*    (lx_nand_flash_driver_extra_bytes_set)                              */ 
-/*                                          NAND flash set extra bytes    */ 
+/*    _lx_nand_flash_sector_read            Read a sector                 */ 
 /*                                                                        */ 
 /*  CALLED BY                                                             */ 
 /*                                                                        */ 
-/*    Internal LevelX                                                     */ 
+/*    Application Code                                                    */ 
 /*                                                                        */ 
 /*  RELEASE HISTORY                                                       */ 
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     William E. Lamie         Initial Version 6.0           */
-/*  09-30-2020     William E. Lamie         Modified comment(s),          */
-/*                                            resulting in version 6.1    */
-/*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
-/*                                            resulting in version 6.1.7  */
+/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-UINT  _lx_nand_flash_driver_extra_bytes_set(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR *source, UINT size)
+UINT  _lx_nand_flash_sectors_read(LX_NAND_FLASH *nand_flash, ULONG logical_sector, VOID *buffer, ULONG sector_count)
 {
 
-ULONG   cache_index;
-ULONG   *destination_ptr;
-UINT    status;
+UINT status = LX_SUCCESS;
+UINT i;
 
 
-    /* Increment the page extra bytes set count.  */
-    nand_flash -> lx_nand_flash_diagnostic_page_extra_bytes_sets++;
-
-    /* Call driver extra bytes set function.  */
-    status =  (nand_flash -> lx_nand_flash_driver_extra_bytes_set)(block, page, source, size);
-
-    /* Determine if the page extra bytes set cache is enabled.  */
-    if (nand_flash ->  lx_nand_flash_page_extra_bytes_cache != LX_NULL)
+    /* Loop to read all the sectors.  */
+    for (i = 0; i < sector_count; i++)
     {
-    
-        /* Calculate the cache index.  */
-        cache_index =  (block * nand_flash -> lx_nand_flash_pages_per_block) + page;
 
-        /* Build destination address.  */
-        destination_ptr =    &nand_flash -> lx_nand_flash_page_extra_bytes_cache[cache_index].lx_nand_page_extra_info_logical_sector;
-    
-        /* Now save this in the cache.  */
-        *destination_ptr =  *((ULONG *) source);  
+        /* Read one sector.  */
+        status = _lx_nand_flash_sector_read(nand_flash, logical_sector + i, ((UCHAR*)buffer) + i * nand_flash -> lx_nand_flash_bytes_per_page);
+
+        /* Check return status.  */
+        if (status)
+        {
+
+            /* Error, break the loop.  */
+            break;
+        }
     }
 
     /* Return status.  */
     return(status);
 }
-
 

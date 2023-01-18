@@ -39,31 +39,28 @@
 /*                                                                        */ 
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
-/*    _lx_nand_flash_driver_write                         PORTABLE C      */ 
-/*                                                           6.1.7        */
+/*    _lx_nand_flash_mapped_block_list_remove             PORTABLE C      */ 
+/*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
-/*    William E. Lamie, Microsoft Corporation                             */
+/*    Xiuwen Cai, Microsoft Corporation                                   */
 /*                                                                        */
 /*  DESCRIPTION                                                           */ 
 /*                                                                        */ 
-/*    This function calls the driver to write data to a NAND page.        */ 
+/*    This function removes mapped block from list.                       */ 
 /*                                                                        */ 
 /*  INPUT                                                                 */ 
 /*                                                                        */ 
 /*    nand_flash                            NAND flash instance           */ 
-/*    block                                 Block number                  */ 
-/*    page                                  Page number                   */ 
-/*    source                                Pointer to source buffer      */ 
-/*    words                                 Number of words to write      */ 
+/*    block_mapping_index                   Block mapping index           */ 
 /*                                                                        */ 
 /*  OUTPUT                                                                */ 
 /*                                                                        */ 
-/*    Completion Status                                                   */ 
+/*    return status                                                       */ 
 /*                                                                        */ 
 /*  CALLS                                                                 */ 
 /*                                                                        */ 
-/*    (lx_nand_flash_driver_write)          Driver page write             */ 
+/*    None                                                                */ 
 /*                                                                        */ 
 /*  CALLED BY                                                             */ 
 /*                                                                        */ 
@@ -73,59 +70,58 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     William E. Lamie         Initial Version 6.0           */
-/*  09-30-2020     William E. Lamie         Modified comment(s),          */
-/*                                            resulting in version 6.1    */
-/*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
-/*                                            resulting in version 6.1.7  */
+/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
 /*                                                                        */
 /**************************************************************************/
-UINT  _lx_nand_flash_driver_write(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, ULONG *source, ULONG words)
+UINT  _lx_nand_flash_mapped_block_list_remove(LX_NAND_FLASH* nand_flash, ULONG block_mapping_index)
 {
 
-ULONG   cache_index;
-ULONG   *source_ptr;
-ULONG   *destination_ptr;
-ULONG   i;
-UINT    status;
+ULONG search_position;
 
 
-    /* Determine if this is page 0.  */
-    if (page == 0)
+    /* Initialize the search pointer.  */
+    search_position = nand_flash -> lx_nand_flash_mapped_block_list_head + 1;
+
+    /* Loop to search the block in the list.  */
+    while (search_position < nand_flash -> lx_nand_flash_block_list_size)
     {
-    
-        /* Determine if the page 0 cache is enabled.  */
-        if (nand_flash -> lx_nand_flash_page_0_cache != LX_NULL)
+
+        /* Check if there is a match in the list.  */
+        if (nand_flash -> lx_nand_flash_block_list[search_position] == block_mapping_index)
         {
-        
-            /* Yes, the page 0 cache is enabled.  */
 
-            /* Calculate the cache index.   */
-            cache_index =  (block * (nand_flash -> lx_nand_flash_pages_per_block + 1));
+            /* Get out of the loop.  */
+            break;
+        }
 
-            /* Setup destination pointer.  */
-            destination_ptr =  &nand_flash -> lx_nand_flash_page_0_cache[cache_index];
-    
-            /* Setup source pointer.  */
-            source_ptr =  (ULONG *) source;
-        
-            /* Simply copy the page 0 information to the destination.  */
-            for (i = 0; i < (nand_flash -> lx_nand_flash_pages_per_block + 1); i++)
-            {
-          
-                /* Copy one word.  */
-                *destination_ptr++ =  *source_ptr++;
-            }
-        }    
+        /* Move to next position.  */
+        search_position++;
     }
 
-    /* Increment the page write count.  */
-    nand_flash -> lx_nand_flash_diagnostic_page_writes++;
+    /* Check if the block is found.  */
+    if (search_position < nand_flash -> lx_nand_flash_block_list_size)
+    {
 
-    /* Call driver write function.  */
-    status =  (nand_flash -> lx_nand_flash_driver_write)(block, page, source, words);
+        /* Remove one item from the list.  */
+        nand_flash -> lx_nand_flash_mapped_block_list_head++;
 
-    /* Return status.  */
-    return(status);
+        /* Loop to move items in the list.  */
+        while (search_position > nand_flash -> lx_nand_flash_mapped_block_list_head)
+        {
+
+            /* Move the item in the list.  */
+            nand_flash -> lx_nand_flash_block_list[search_position] = nand_flash -> lx_nand_flash_block_list[search_position - 1];
+            search_position--;
+        }
+    }
+    else
+    {
+
+        /* Return error.  */
+        return(LX_NO_BLOCKS);
+    }
+
+    /* Return successful completion.  */
+    return(LX_SUCCESS);
 }
 
