@@ -105,12 +105,29 @@ ULONG  *nand_flash_memory;
 
 
 UINT  _lx_nand_flash_simulator_initialize(LX_NAND_FLASH *nand_flash);
+UINT  _lx_nand_flash_simulator_erase_all(VOID);
+
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_read(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, ULONG *destination, ULONG words);
+UINT  _lx_nand_flash_simulator_write(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, ULONG *source, ULONG words);
+UINT  _lx_nand_flash_simulator_block_erase(LX_NAND_FLASH *nand_flash, ULONG block, ULONG erase_count);
+UINT  _lx_nand_flash_simulator_block_erased_verify(LX_NAND_FLASH *nand_flash, ULONG block);
+UINT  _lx_nand_flash_simulator_page_erased_verify(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page);
+UINT  _lx_nand_flash_simulator_block_status_get(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR *bad_block_byte);
+UINT  _lx_nand_flash_simulator_block_status_set(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR bad_block_byte);
+UINT  _lx_nand_flash_simulator_extra_bytes_get(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR *destination, UINT size);
+UINT  _lx_nand_flash_simulator_extra_bytes_set(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR *source, UINT size);
+UINT  _lx_nand_flash_simulator_system_error(LX_NAND_FLASH *nand_flash, UINT error_code, ULONG block, ULONG page);
+
+UINT  _lx_nand_flash_simulator_pages_read(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
+UINT  _lx_nand_flash_simulator_pages_write(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
+UINT  _lx_nand_flash_simulator_pages_copy(LX_NAND_FLASH *nand_flash, ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR* data_buffer);
+#else
 UINT  _lx_nand_flash_simulator_read(ULONG block, ULONG page, ULONG *destination, ULONG words);
 UINT  _lx_nand_flash_simulator_write(ULONG block, ULONG page, ULONG *source, ULONG words);
 UINT  _lx_nand_flash_simulator_block_erase(ULONG block, ULONG erase_count);
 UINT  _lx_nand_flash_simulator_block_erased_verify(ULONG block);
 UINT  _lx_nand_flash_simulator_page_erased_verify(ULONG block, ULONG page);
-UINT  _lx_nand_flash_simulator_erase_all(VOID);
 UINT  _lx_nand_flash_simulator_block_status_get(ULONG block, UCHAR *bad_block_byte);
 UINT  _lx_nand_flash_simulator_block_status_set(ULONG block, UCHAR bad_block_byte);
 UINT  _lx_nand_flash_simulator_extra_bytes_get(ULONG block, ULONG page, UCHAR *destination, UINT size);
@@ -120,6 +137,7 @@ UINT  _lx_nand_flash_simulator_system_error(UINT error_code, ULONG block, ULONG 
 UINT  _lx_nand_flash_simulator_pages_read(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
 UINT  _lx_nand_flash_simulator_pages_write(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
 UINT  _lx_nand_flash_simulator_pages_copy(ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR* data_buffer);
+#endif
 UINT  _lx_nand_flash_simulator_page_ecc_check(ULONG block, ULONG page);
 
 UINT  _lx_nand_flash_simulator_initialize(LX_NAND_FLASH *nand_flash)
@@ -200,12 +218,19 @@ UINT    status;
     return ecc_status;
 }
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_read(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, ULONG *destination, ULONG words)
+#else
 UINT  _lx_nand_flash_simulator_read(ULONG block, ULONG page, ULONG *destination, ULONG words)
+#endif
 {
 
 ULONG   *flash_address;
 UINT    status;
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     status = _lx_nand_flash_simulator_page_ecc_check(block, page);
 
@@ -222,8 +247,11 @@ UINT    status;
     return(status);
 }
 
-
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_pages_read(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages)
+#else
 UINT  _lx_nand_flash_simulator_pages_read(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages)
+#endif
 {
 
 UINT    i;
@@ -236,7 +264,11 @@ UINT    ecc_status = LX_SUCCESS;
         if (main_buffer)
         {
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+            status = _lx_nand_flash_simulator_read(nand_flash, block, page + i, (ULONG*)(main_buffer + i * BYTES_PER_PHYSICAL_PAGE), WORDS_PER_PHYSICAL_PAGE);
+#else
             status = _lx_nand_flash_simulator_read(block, page + i, (ULONG*)(main_buffer + i * BYTES_PER_PHYSICAL_PAGE), WORDS_PER_PHYSICAL_PAGE);
+#endif
             if (status == LX_NAND_ERROR_CORRECTED)
             {
                 ecc_status = LX_NAND_ERROR_CORRECTED;
@@ -247,13 +279,20 @@ UINT    ecc_status = LX_SUCCESS;
                 break;
             }
         }
-
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+        status = _lx_nand_flash_simulator_extra_bytes_get(nand_flash, block, page + i, spare_buffer + i * SPARE_BYTES_PER_PAGE, SPARE_BYTES_PER_PAGE);
+#else
         status = _lx_nand_flash_simulator_extra_bytes_get(block, page + i, spare_buffer + i * SPARE_BYTES_PER_PAGE, SPARE_BYTES_PER_PAGE);
+#endif
     }    
     return (ecc_status);
 }
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_write(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, ULONG *source, ULONG words)
+#else
 UINT  _lx_nand_flash_simulator_write(ULONG block, ULONG page, ULONG *source, ULONG words)
+#endif
 {
 
 ULONG   *flash_address;
@@ -264,6 +303,10 @@ UCHAR   new_ecc_buffer[24];
 UCHAR   *new_ecc_buffer_ptr = new_ecc_buffer;
 UCHAR   *ecc_buffer_ptr = new_ecc_buffer_ptr;
 ULONG   *page_ptr = &(nand_memory_area[block].physical_pages[page].memory[0]);
+
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     /* Increment the diag info.  */
     nand_block_diag[block].page_writes[page]++;
@@ -324,7 +367,11 @@ ULONG   *page_ptr = &(nand_memory_area[block].physical_pages[page].memory[0]);
     return(LX_SUCCESS);
 }
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_pages_write(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages)
+#else
 UINT  _lx_nand_flash_simulator_pages_write(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages)
+#endif
 {
 
 UINT    i;
@@ -333,8 +380,13 @@ UINT    status = LX_SUCCESS;
 
     for (i = 0; i < pages; i++)
     {
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+        _lx_nand_flash_simulator_extra_bytes_set(nand_flash, block, page + i, spare_buffer + i * SPARE_BYTES_PER_PAGE, SPARE_BYTES_PER_PAGE);
+        status = _lx_nand_flash_simulator_write(nand_flash, block, page + i, (ULONG*)(main_buffer + i * BYTES_PER_PHYSICAL_PAGE), WORDS_PER_PHYSICAL_PAGE);
+#else
         _lx_nand_flash_simulator_extra_bytes_set(block, page + i, spare_buffer + i * SPARE_BYTES_PER_PAGE, SPARE_BYTES_PER_PAGE);
         status = _lx_nand_flash_simulator_write(block, page + i, (ULONG*)(main_buffer + i * BYTES_PER_PHYSICAL_PAGE), WORDS_PER_PHYSICAL_PAGE);
+#endif
         if (status == LX_INVALID_WRITE)
         {
             break;
@@ -344,8 +396,11 @@ UINT    status = LX_SUCCESS;
     return (status);
 }
 
-
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_pages_copy(LX_NAND_FLASH *nand_flash, ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR *data_buffer)
+#else
 UINT  _lx_nand_flash_simulator_pages_copy(ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR *data_buffer)
+#endif
 {
     UINT    i;
     UINT    status = LX_SUCCESS;
@@ -353,12 +408,20 @@ UINT  _lx_nand_flash_simulator_pages_copy(ULONG source_block, ULONG source_page,
 
     for (i = 0; i < pages; i++)
     {
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+        status = _lx_nand_flash_simulator_pages_read(nand_flash, source_block, source_page + i, data_buffer, data_buffer + BYTES_PER_PHYSICAL_PAGE, 1);
+#else
         status = _lx_nand_flash_simulator_pages_read(source_block, source_page + i, data_buffer, data_buffer + BYTES_PER_PHYSICAL_PAGE, 1);
+#endif
         if (status != LX_SUCCESS && status != LX_NAND_ERROR_CORRECTED)
         {
             break;
         }
-        _lx_nand_flash_simulator_pages_write(destination_block, destination_page + i, data_buffer, data_buffer + BYTES_PER_PHYSICAL_PAGE, 1);
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+        status = _lx_nand_flash_simulator_pages_write(nand_flash, destination_block, destination_page + i, data_buffer, data_buffer + BYTES_PER_PHYSICAL_PAGE, 1);
+#else
+        status = _lx_nand_flash_simulator_pages_write(destination_block, destination_page + i, data_buffer, data_buffer + BYTES_PER_PHYSICAL_PAGE, 1);
+#endif
         if (status != LX_SUCCESS)
         {
             break;
@@ -369,7 +432,11 @@ UINT  _lx_nand_flash_simulator_pages_copy(ULONG source_block, ULONG source_page,
 
 }
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_block_erase(LX_NAND_FLASH *nand_flash, ULONG block, ULONG erase_count)
+#else
 UINT  _lx_nand_flash_simulator_block_erase(ULONG block, ULONG erase_count)
+#endif
 {
 
 ULONG   *pointer;
@@ -377,6 +444,9 @@ ULONG   words;
 UINT    i;
 
     LX_PARAMETER_NOT_USED(erase_count);
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     /* Increment the diag info.  */
     nand_block_diag[block].erases++;
@@ -431,11 +501,19 @@ UINT    i, j;
 }
 
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_block_erased_verify(LX_NAND_FLASH *nand_flash, ULONG block)
+#else
 UINT  _lx_nand_flash_simulator_block_erased_verify(ULONG block)
+#endif
 {
 
 ULONG   *word_ptr;
 ULONG   words;
+
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     /* Determine if the block is completely erased.  */
     
@@ -458,12 +536,19 @@ ULONG   words;
     return(LX_SUCCESS);
 }
 
-
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_page_erased_verify(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page)
+#else
 UINT  _lx_nand_flash_simulator_page_erased_verify(ULONG block, ULONG page)
+#endif
 {
 
 ULONG   *word_ptr;
 ULONG   words;
+
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     /* Determine if the block is completely erased.  */
     
@@ -486,9 +571,16 @@ ULONG   words;
     return(LX_SUCCESS);
 }
 
-
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_block_status_get(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR *bad_block_byte)
+#else
 UINT  _lx_nand_flash_simulator_block_status_get(ULONG block, UCHAR *bad_block_byte)
+#endif
 {
+
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     /* Pickup the bad block byte and return it.  */
     *bad_block_byte =  nand_memory_area[block].physical_pages[0].spare[BAD_BLOCK_POSITION];
@@ -497,8 +589,16 @@ UINT  _lx_nand_flash_simulator_block_status_get(ULONG block, UCHAR *bad_block_by
     return(LX_SUCCESS);
 }
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_block_status_set(LX_NAND_FLASH *nand_flash, ULONG block, UCHAR bad_block_byte)
+#else
 UINT  _lx_nand_flash_simulator_block_status_set(ULONG block, UCHAR bad_block_byte)
+#endif
 {
+
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     /* Set the bad block byte.  */
     nand_memory_area[block].physical_pages[0].spare[BAD_BLOCK_POSITION] =  bad_block_byte;
@@ -508,12 +608,18 @@ UINT  _lx_nand_flash_simulator_block_status_set(ULONG block, UCHAR bad_block_byt
 }
 
 
-
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_extra_bytes_get(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR *destination, UINT size)
+#else
 UINT  _lx_nand_flash_simulator_extra_bytes_get(ULONG block, ULONG page, UCHAR *destination, UINT size)
+#endif
 {
 
 UCHAR   *source;
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
     
     /* Setup source pointer in the spare area.  */
     source =  (UCHAR *) &(nand_memory_area[block].physical_pages[page].spare[EXTRA_BYTE_POSITION]);
@@ -530,12 +636,18 @@ UCHAR   *source;
     return(LX_SUCCESS);
 }
 
-
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_extra_bytes_set(LX_NAND_FLASH *nand_flash, ULONG block, ULONG page, UCHAR *source, UINT size)
+#else
 UINT  _lx_nand_flash_simulator_extra_bytes_set(ULONG block, ULONG page, UCHAR *source, UINT size)
+#endif
 {
 
 UCHAR   *destination;
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
     
     /* Increment the diag info.  */
     nand_block_diag[block].page_writes[page]++;
@@ -557,11 +669,18 @@ UCHAR   *destination;
     return(LX_SUCCESS);
 }
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+UINT  _lx_nand_flash_simulator_system_error(LX_NAND_FLASH *nand_flash, UINT error_code, ULONG block, ULONG page)
+#else
 UINT  _lx_nand_flash_simulator_system_error(UINT error_code, ULONG block, ULONG page)
+#endif
 {
     LX_PARAMETER_NOT_USED(error_code);
     LX_PARAMETER_NOT_USED(block);
     LX_PARAMETER_NOT_USED(page);
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nand_flash);
+#endif
 
     /* Custom processing goes here...  all errors except for LX_NAND_ERROR_CORRECTED are fatal.  */
     return(LX_ERROR);

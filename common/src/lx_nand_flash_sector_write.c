@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_sector_write                         PORTABLE C      */ 
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Xiuwen Cai, Microsoft Corporation                                   */
@@ -88,7 +88,7 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
+/*  03-08-2023     Xiuwen Cai               Initial Version 6.2.1        */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_sector_write(LX_NAND_FLASH *nand_flash, ULONG logical_sector, VOID *buffer)
@@ -253,7 +253,11 @@ UINT                                copy_block = LX_FALSE;
     page = new_block_status & LX_NAND_BLOCK_STATUS_PAGE_NUMBER_MASK;
 
     /* Write the page.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    status = (nand_flash -> lx_nand_flash_driver_pages_write)(nand_flash, new_block, page, (UCHAR*)buffer, spare_buffer_ptr, 1);
+#else
     status = (nand_flash -> lx_nand_flash_driver_pages_write)(new_block, page, (UCHAR*)buffer, spare_buffer_ptr, 1);
+#endif
 
     /* Check for an error from flash driver.   */
     if (status)

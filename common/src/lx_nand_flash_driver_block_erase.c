@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_driver_block_erase                   PORTABLE C      */ 
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -76,9 +76,10 @@
 /*                                            resulting in version 6.1    */
 /*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
 /*                                            resulting in version 6.1.7  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
+/*  03-08-2023     Xiuwen Cai               Modified comment(s),          */
 /*                                            removed cache support,      */
-/*                                            resulting in version 6.x    */
+/*                                            added new driver interface, */
+/*                                            resulting in version 6.2.1 */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_driver_block_erase(LX_NAND_FLASH *nand_flash, ULONG block, ULONG erase_count)
@@ -91,7 +92,11 @@ UINT    status;
     nand_flash -> lx_nand_flash_diagnostic_block_erases++;
 
     /* Call driver erase block function.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    status =  (nand_flash -> lx_nand_flash_driver_block_erase)(nand_flash, block, erase_count);
+#else
     status =  (nand_flash -> lx_nand_flash_driver_block_erase)(block, erase_count);
+#endif
 
     /* Return status.  */
     return(status);

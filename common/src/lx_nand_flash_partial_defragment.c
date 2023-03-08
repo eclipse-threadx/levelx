@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_partial_defragment                   PORTABLE C      */ 
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -78,9 +78,9 @@
 /*                                            resulting in version 6.1    */
 /*  06-02-2021     Bhupendra Naphade        Modified comment(s),          */
 /*                                            resulting in version 6.1.7  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
+/*  03-08-2023     Xiuwen Cai               Modified comment(s),          */
 /*                                            deprecated this API,        */
-/*                                            resulting in version 6.x    */
+/*                                            resulting in version 6.2.1 */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_partial_defragment(LX_NAND_FLASH *nand_flash, UINT max_blocks)

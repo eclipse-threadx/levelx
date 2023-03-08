@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_data_page_copy                       PORTABLE C      */ 
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Xiuwen Cai, Microsoft Corporation                                   */
@@ -78,7 +78,7 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
+/*  03-08-2023     Xiuwen Cai               Initial Version 6.2.1        */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_data_page_copy(LX_NAND_FLASH* nand_flash, ULONG logical_sector, ULONG source_block, USHORT src_block_status,
@@ -121,7 +121,11 @@ ULONG   number_of_pages;
             {
 
                 /* Read one page.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+                status = (nand_flash -> lx_nand_flash_driver_pages_read)(nand_flash, source_block, (ULONG)source_page, LX_NULL, spare_buffer_ptr, 1);
+#else
                 status = (nand_flash -> lx_nand_flash_driver_pages_read)(source_block, (ULONG)source_page, LX_NULL, spare_buffer_ptr, 1);
+#endif
 
                 /* Check for an error from flash driver.   */
                 if (status)
@@ -146,7 +150,11 @@ ULONG   number_of_pages;
                     {
 
                         /* Call the driver to copy the page.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+                        status = (nand_flash -> lx_nand_flash_driver_pages_copy)(nand_flash, source_block, (ULONG)source_page, destination_block, destination_page, 1, nand_flash -> lx_nand_flash_page_buffer);
+#else
                         status = (nand_flash -> lx_nand_flash_driver_pages_copy)(source_block, (ULONG)source_page, destination_block, destination_page, 1, nand_flash -> lx_nand_flash_page_buffer);
+#endif
 
                         /* Check for an error from flash driver.   */
                         if (status)
@@ -197,7 +205,11 @@ ULONG   number_of_pages;
         {
 
             /* Call the driver to copy pages.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+            status = (nand_flash -> lx_nand_flash_driver_pages_copy)(nand_flash, source_block, (ULONG)source_page, destination_block, destination_page, number_of_pages, nand_flash -> lx_nand_flash_page_buffer);
+#else
             status = (nand_flash -> lx_nand_flash_driver_pages_copy)(source_block, (ULONG)source_page, destination_block, destination_page, number_of_pages, nand_flash -> lx_nand_flash_page_buffer);
+#endif
 
             /* Check for an error from flash driver.   */
             if (status)

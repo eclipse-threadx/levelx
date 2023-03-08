@@ -26,7 +26,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    lx_api.h                                            PORTABLE C      */
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -75,9 +75,11 @@
 /*  10-31-2022     Xiuwen Cai               Modified comment(s), and      */
 /*                                            updated product constants,  */
 /*                                            resulting in version 6.2.0  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
+/*  03-08-2023     Xiuwen Cai               Modified comment(s),          */
 /*                                            modified NAND logic,        */
-/*                                            resulting in version 6.x    */
+/*                                            added new driver interface  */
+/*                                            and user extension,         */
+/*                                            resulting in version 6.2.1 */
 /*                                                                        */
 /**************************************************************************/
 
@@ -190,7 +192,7 @@ typedef unsigned long long                      ULONG64;
 #define AZURE_RTOS_LEVELX
 #define LEVELX_MAJOR_VERSION                        6
 #define LEVELX_MINOR_VERSION                        2
-#define LEVELX_PATCH_VERSION                        0
+#define LEVELX_PATCH_VERSION                        1
 
 
 /* Define general LevelX Constants.  */
@@ -385,6 +387,14 @@ typedef struct LX_NAND_DEVICE_INFO_STRUCT
     ULONG                           lx_nand_device_info_base_erase_count;
 } LX_NAND_DEVICE_INFO;
 
+
+/* Determine if the flash control block has an extension defined. If not, 
+   define the extension to whitespace.  */
+
+#ifndef LX_NAND_FLASH_USER_EXTENSION
+#define LX_NAND_FLASH_USER_EXTENSION
+#endif
+
 /* Define the NAND flash control block structure.  */
 
 typedef struct LX_NAND_FLASH_STRUCT
@@ -454,6 +464,22 @@ typedef struct LX_NAND_FLASH_STRUCT
     ULONG                           lx_nand_flash_diagnostic_block_erased_verifies;
     ULONG                           lx_nand_flash_diagnostic_page_erased_verifies;
 
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    UINT                            (*lx_nand_flash_driver_read)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG page, ULONG *destination, ULONG words);
+    UINT                            (*lx_nand_flash_driver_write)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG page, ULONG *source, ULONG words);
+    UINT                            (*lx_nand_flash_driver_block_erase)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG erase_count);
+    UINT                            (*lx_nand_flash_driver_block_erased_verify)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block);
+    UINT                            (*lx_nand_flash_driver_page_erased_verify)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG page);
+    UINT                            (*lx_nand_flash_driver_block_status_get)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, UCHAR *bad_block_flag);
+    UINT                            (*lx_nand_flash_driver_block_status_set)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, UCHAR bad_block_flag);
+    UINT                            (*lx_nand_flash_driver_extra_bytes_get)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG page, UCHAR *destination, UINT size);
+    UINT                            (*lx_nand_flash_driver_extra_bytes_set)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG page, UCHAR *source, UINT size);
+    UINT                            (*lx_nand_flash_driver_system_error)(struct LX_NAND_FLASH_STRUCT *nand_flash, UINT error_code, ULONG block, ULONG page);
+    
+    UINT                            (*lx_nand_flash_driver_pages_read)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
+    UINT                            (*lx_nand_flash_driver_pages_write)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
+    UINT                            (*lx_nand_flash_driver_pages_copy)(struct LX_NAND_FLASH_STRUCT *nand_flash, ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR* data_buffer);
+#else
     UINT                            (*lx_nand_flash_driver_read)(ULONG block, ULONG page, ULONG *destination, ULONG words);
     UINT                            (*lx_nand_flash_driver_write)(ULONG block, ULONG page, ULONG *source, ULONG words);
     UINT                            (*lx_nand_flash_driver_block_erase)(ULONG block, ULONG erase_count);
@@ -468,7 +494,7 @@ typedef struct LX_NAND_FLASH_STRUCT
     UINT                            (*lx_nand_flash_driver_pages_read)(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
     UINT                            (*lx_nand_flash_driver_pages_write)(ULONG block, ULONG page, UCHAR* main_buffer, UCHAR* spare_buffer, ULONG pages);
     UINT                            (*lx_nand_flash_driver_pages_copy)(ULONG source_block, ULONG source_page, ULONG destination_block, ULONG destination_page, ULONG pages, UCHAR* data_buffer);
-
+#endif
     UCHAR                           *lx_nand_flash_page_buffer;
     UINT                            lx_nand_flash_page_buffer_size;
 
@@ -483,6 +509,10 @@ typedef struct LX_NAND_FLASH_STRUCT
     /* Define the NAND flash control block open next/previous pointers.  */
     struct LX_NAND_FLASH_STRUCT     *lx_nand_flash_open_next,
                                     *lx_nand_flash_open_previous;
+
+    /* Define the user extension in the flash control block. This 
+       is typically defined in lx_user.h.  */
+    LX_NAND_FLASH_USER_EXTENSION
     
 } LX_NAND_FLASH;
 
@@ -507,6 +537,13 @@ typedef struct LX_NOR_FLASH_EXTENDED_CACHE_ENTRY_STRUCT
     ULONG                           lx_nor_flash_extended_cache_entry_access_count;
 } LX_NOR_FLASH_EXTENDED_CACHE_ENTRY;
 
+
+/* Determine if the flash control block has an extension defined. If not, 
+   define the extension to whitespace.  */
+
+#ifndef LX_NOR_FLASH_USER_EXTENSION
+#define LX_NOR_FLASH_USER_EXTENSION
+#endif
 
 /* Define the NOR flash control block structure.  */
 
@@ -553,11 +590,19 @@ typedef struct LX_NOR_FLASH_STRUCT
     ULONG                           lx_nor_flash_diagnostic_sector_not_free;
     ULONG                           lx_nor_flash_diagnostic_sector_data_not_free;
 
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    UINT                            (*lx_nor_flash_driver_read)(struct LX_NOR_FLASH_STRUCT *nor_flash, ULONG *flash_address, ULONG *destination, ULONG words);
+    UINT                            (*lx_nor_flash_driver_write)(struct LX_NOR_FLASH_STRUCT *nor_flash, ULONG *flash_address, ULONG *source, ULONG words);
+    UINT                            (*lx_nor_flash_driver_block_erase)(struct LX_NOR_FLASH_STRUCT *nor_flash, ULONG block, ULONG erase_count);
+    UINT                            (*lx_nor_flash_driver_block_erased_verify)(struct LX_NOR_FLASH_STRUCT *nor_flash, ULONG block);
+    UINT                            (*lx_nor_flash_driver_system_error)(struct LX_NOR_FLASH_STRUCT *nor_flash, UINT error_code);
+#else
     UINT                            (*lx_nor_flash_driver_read)(ULONG *flash_address, ULONG *destination, ULONG words);
     UINT                            (*lx_nor_flash_driver_write)(ULONG *flash_address, ULONG *source, ULONG words);
     UINT                            (*lx_nor_flash_driver_block_erase)(ULONG block, ULONG erase_count);
     UINT                            (*lx_nor_flash_driver_block_erased_verify)(ULONG block);
     UINT                            (*lx_nor_flash_driver_system_error)(UINT error_code);
+#endif
 
     ULONG                           *lx_nor_flash_sector_buffer;
     UINT                            lx_nor_flash_sector_mapping_cache_enabled;
@@ -585,6 +630,10 @@ typedef struct LX_NOR_FLASH_STRUCT
     struct LX_NOR_FLASH_STRUCT      *lx_nor_flash_open_next,
                                     *lx_nor_flash_open_previous;
     
+    /* Define the user extension in the flash control block. This 
+       is typically defined in lx_user.h.  */
+    LX_NOR_FLASH_USER_EXTENSION
+
 } LX_NOR_FLASH;
 
 

@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_sector_release                       PORTABLE C      */ 
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Xiuwen Cai, Microsoft Corporation                                   */
@@ -86,7 +86,7 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
+/*  03-08-2023     Xiuwen Cai               Initial Version 6.2.1        */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_sector_release(LX_NAND_FLASH *nand_flash, ULONG logical_sector)
@@ -155,7 +155,11 @@ USHORT      new_block_status;
             {
 
                 /* Read a page.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+                status = (nand_flash -> lx_nand_flash_driver_pages_read)(nand_flash, block, (ULONG)page, LX_NULL, spare_buffer_ptr, 1);
+#else
                 status = (nand_flash -> lx_nand_flash_driver_pages_read)(block, (ULONG)page, LX_NULL, spare_buffer_ptr, 1);
+#endif
 
                 /* Check for an error from flash driver.   */
                 if (status)
@@ -411,7 +415,11 @@ USHORT      new_block_status;
                 LX_UTILITY_LONG_SET(&spare_buffer_ptr[nand_flash -> lx_nand_flash_spare_data1_offset], LX_NAND_PAGE_TYPE_USER_DATA_RELEASED | logical_sector);
                 
                 /* Write the page.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+                status = (nand_flash -> lx_nand_flash_driver_pages_write)(nand_flash, block, available_pages, (UCHAR*)nand_flash -> lx_nand_flash_page_buffer, spare_buffer_ptr, 1);
+#else
                 status = (nand_flash -> lx_nand_flash_driver_pages_write)(block, available_pages, (UCHAR*)nand_flash -> lx_nand_flash_page_buffer, spare_buffer_ptr, 1);
+#endif
 
                 /* Check for an error from flash driver.   */
                 if (status)

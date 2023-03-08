@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_metadata_write                       PORTABLE C      */ 
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Xiuwen Cai, Microsoft Corporation                                   */
@@ -74,7 +74,7 @@
 /*                                                                        */ 
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  xx-xx-xxxx     Xiuwen Cai               Initial Version 6.x           */
+/*  03-08-2023     Xiuwen Cai               Initial Version 6.2.1        */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_metadata_write(LX_NAND_FLASH *nand_flash, UCHAR* main_buffer, ULONG spare_value)
@@ -110,7 +110,11 @@ UCHAR   *spare_buffer_ptr;
     page = nand_flash -> lx_nand_flash_metadata_block_current_page;
 
     /* Write the page.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    status = (nand_flash -> lx_nand_flash_driver_pages_write)(nand_flash, block, page, main_buffer, spare_buffer_ptr, 1);
+#else
     status = (nand_flash -> lx_nand_flash_driver_pages_write)(block, page, main_buffer, spare_buffer_ptr, 1);
+#endif
 
     /* Check for an error from flash driver.   */    
     if (status)
@@ -133,7 +137,11 @@ UCHAR   *spare_buffer_ptr;
     page = nand_flash -> lx_nand_flash_backup_metadata_block_current_page;
 
     /* Write the page.  */
+#ifdef LX_NAND_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    status = (nand_flash -> lx_nand_flash_driver_pages_write)(nand_flash, block, page, main_buffer, spare_buffer_ptr, 1);
+#else
     status = (nand_flash -> lx_nand_flash_driver_pages_write)(block, page, main_buffer, spare_buffer_ptr, 1);
+#endif
 
     /* Check for an error from flash driver.   */
     if (status)

@@ -26,7 +26,7 @@
 /*  PORT SPECIFIC C INFORMATION                            RELEASE        */
 /*                                                                        */
 /*    lx_user.h                                           PORTABLE C      */
-/*                                                           6.x          */
+/*                                                           6.2.1       */
 /*                                                                        */
 /*  AUTHOR                                                                */
 /*                                                                        */
@@ -48,9 +48,9 @@
 /*  06-02-2021     Bhupendra Naphade        Modified comment(s), and      */
 /*                                            added standalone support,   */
 /*                                            resulting in version 6.1.7  */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s), and      */
+/*  03-08-2023     Xiuwen Cai               Modified comment(s), and      */
 /*                                            added new NAND options,     */
-/*                                            resulting in version 6.x    */
+/*                                            resulting in version 6.2.1 */
 /*                                                                        */
 /**************************************************************************/
 
@@ -113,7 +113,15 @@
 
 /* #define LX_STANDALONE_ENABLE */
 
+/* Define user extension for NOR flash control block.  */
+/* 
+#define LX_NOR_FLASH_USER_EXTENSION    ????
+*/
 
+/* Define user extension for NAND flash control block.  */
+/* 
+#define LX_NAND_FLASH_USER_EXTENSION   ????
+*/
 
 #endif
 
