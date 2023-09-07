@@ -127,18 +127,18 @@ extern   "C" {
 #define VOID                                    void
 typedef char                                    CHAR;
 typedef char                                    BOOL;
-typedef unsigned char                           UCHAR;
-typedef int                                     INT;
-typedef unsigned int                            UINT;
-typedef long                                    LONG;
-typedef unsigned long                           ULONG;
-typedef short                                   SHORT;
-typedef unsigned short                          USHORT;
+typedef uint8_t                                 UCHAR;
+typedef int32_t                                 INT;
+typedef uint32_t                                UINT;
+typedef int32_t                                 LONG;
+typedef uint32_t                                ULONG;
+typedef int16_t                                 SHORT;
+typedef uint16_t                                USHORT;
 #endif
 
 #ifndef ULONG64_DEFINED
 #define ULONG64_DEFINED
-typedef unsigned long long                      ULONG64;
+typedef uint64_t                                ULONG64;
 #endif
 
 /* Define basic alignment type used in block and byte pool operations. This data type must
