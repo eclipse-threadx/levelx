@@ -445,7 +445,7 @@ UINT    status;
                         _lx_nor_flash_system_error(nor_flash, LX_SYSTEM_ALLOCATION_FAILED);
 
                         /* Return the error.  */
-                        return(status);
+                        return(LX_SYSTEM_ALLOCATION_FAILED);
                     }
                         
                     /* Decrement the number of mapped sectors.  */
