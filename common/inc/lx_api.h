@@ -26,7 +26,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    lx_api.h                                            PORTABLE C      */
-/*                                                           6.3.0        */
+/*                                                           6.x          */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -86,6 +86,9 @@
 /*                                            bitmap and obsolete count   */
 /*                                            cache for NOR flash,        */
 /*                                            resulting in version 6.3.0  */
+/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
+/*                                            added configuration checks, */
+/*                                            resulting in version 6.x    */
 /*                                                                        */
 /**************************************************************************/
 
@@ -278,6 +281,19 @@ typedef unsigned long long                      ULONG64;
 #define LX_NOR_LOGICAL_SECTOR_MASK                  0x1FFFFFFF
 #define LX_NOR_PHYSICAL_SECTOR_FREE                 0xFFFFFFFF
 
+
+/* Check extended cache configurations.  */
+#ifdef LX_NOR_DISABLE_EXTENDED_CACHE
+
+#ifdef LX_NOR_ENABLE_MAPPING_BITMAP
+#error "To enable mapping bitmap, you need to undefine LX_NOR_DISABLE_EXTENDED_CACHE."
+#endif
+
+#ifdef LX_NOR_ENABLE_OBSOLETE_COUNT_CACHE
+#error "To enable obsolete count cache, you need to undefine LX_NOR_DISABLE_EXTENDED_CACHE."
+#endif
+
+#endif
 
 /* Define NAND flash constants.  */
 
