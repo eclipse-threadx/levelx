@@ -40,7 +40,7 @@
 /*  FUNCTION                                               RELEASE        */ 
 /*                                                                        */ 
 /*    _lx_nand_flash_data_page_copy                       PORTABLE C      */ 
-/*                                                           6.x          */
+/*                                                           6.4.0        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Xiuwen Cai, Microsoft Corporation                                   */
@@ -79,10 +79,10 @@
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
 /*  03-08-2023     Xiuwen Cai               Initial Version 6.2.1         */
-/*  xx-xx-xxxx     Xiuwen Cai               Modified comment(s),          */
+/*  12-31-2023     Xiuwen Cai               Modified comment(s),          */
 /*                                            fixed sequential checking   */
 /*                                            logic,                      */
-/*                                            resulting in version 6.x    */
+/*                                            resulting in version 6.4.0  */
 /*                                                                        */
 /**************************************************************************/
 UINT  _lx_nand_flash_data_page_copy(LX_NAND_FLASH* nand_flash, ULONG logical_sector, ULONG source_block, USHORT src_block_status,
