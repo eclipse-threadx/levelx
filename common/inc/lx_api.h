@@ -25,7 +25,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    lx_api.h                                            PORTABLE C      */
-/*                                                           6.4.0        */
+/*                                                           6.4.1        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Microsoft Corporation                             */
@@ -88,6 +88,9 @@
 /*  12-31-2023     Xiuwen Cai               Modified comment(s),          */
 /*                                            added configuration checks, */
 /*                                            resulting in version 6.4.0  */
+/*  03-01-2024      Tiejun Zhou             Modified comment(s),          */
+/*                                            update version number,      */
+/*                                            resulting in version 6.4.1  */
 /*                                                                        */
 /**************************************************************************/
 
@@ -200,7 +203,7 @@ typedef unsigned long long                      ULONG64;
 #define AZURE_RTOS_LEVELX
 #define LEVELX_MAJOR_VERSION                        6
 #define LEVELX_MINOR_VERSION                        4
-#define LEVELX_PATCH_VERSION                        0
+#define LEVELX_PATCH_VERSION                        1
 
 
 /* Define general LevelX Constants.  */
