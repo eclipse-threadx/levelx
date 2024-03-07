@@ -116,7 +116,7 @@ Instruction for building the LevelX as static library using Arm GNU Toolchain an
 
 ## Licensing
 
-License terms for using Eclipse ThreadX are defined in the LICENSE.txt file of this repo. Please refer to this file for all definitive licensing information.
+License terms for using Eclipse ThreadX are defined in the LICENSE.txt file of this repo. Please refer to this file for all definitive licensing information for all content, incl. the history of this repo.
 
 ## Resources
 
