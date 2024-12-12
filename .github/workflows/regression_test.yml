@@ -22,4 +22,4 @@ jobs:
       pull-requests: write
       pages: write
       id-token: write
-    uses: azure-rtos/threadx/.github/workflows/regression_template.yml@master
+    uses: eclipse-threadx/threadx/.github/workflows/regression_template.yml@master
