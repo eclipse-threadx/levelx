@@ -274,6 +274,17 @@ typedef unsigned long long                      ULONG64;
 #define LX_NAND_FLASH_MAX_METADATA_BLOCKS           4
 #endif
 
+/* When LX_NAND_FLASH_ENABLE_LAZY_SECTOR_RELEASE is defined, sector releases from full blocks
+   are deferred when free block count exceeds the threshold below (opt-in, default: off).
+   Requires pages_per_block <= 4095 (bit 12 is reserved for COMPACTION_PENDING flag).  */
+/* #define LX_NAND_FLASH_ENABLE_LAZY_SECTOR_RELEASE */
+
+#ifdef LX_NAND_FLASH_ENABLE_LAZY_SECTOR_RELEASE
+#ifndef LX_NAND_FLASH_SECTOR_RELEASE_LAZY_THRESHOLD
+#define LX_NAND_FLASH_SECTOR_RELEASE_LAZY_THRESHOLD 10u
+#endif
+#endif
+
 #ifndef LX_UTILITY_SHORT_SET
 #define LX_UTILITY_SHORT_SET(address, value)        *((USHORT*)(address)) = (USHORT)(value)
 #endif
@@ -328,6 +339,11 @@ typedef unsigned long long                      ULONG64;
 #define LX_NAND_BLOCK_STATUS_FULL                   0x4000u
 #define LX_NAND_BLOCK_STATUS_NON_SEQUENTIAL         0x2000u
 #define LX_NAND_BLOCK_STATUS_MAPPING_PRESENT        0x1000u
+#ifdef LX_NAND_FLASH_ENABLE_LAZY_SECTOR_RELEASE
+/* Repurpose the otherwise-unused MAPPING_PRESENT bit to signal a block whose compaction
+   has been deferred.  Only valid when pages_per_block <= 4095.  */
+#define LX_NAND_BLOCK_STATUS_COMPACTION_PENDING     LX_NAND_BLOCK_STATUS_MAPPING_PRESENT
+#endif
 #define LX_NAND_BLOCK_STATUS_PAGE_NUMBER_MASK       0x0FFFu
 #define LX_NAND_BLOCK_STATUS_FREE                   0xFFFFu
 #define LX_NAND_BLOCK_STATUS_BAD                    0xFF00u
@@ -402,6 +418,12 @@ typedef struct LX_NAND_FLASH_STRUCT
     USHORT                         *lx_nand_flash_block_list;
     ULONG                           lx_nand_flash_block_list_size;
     ULONG                           lx_nand_flash_free_block_list_tail;
+#ifdef LX_NAND_FLASH_ENABLE_LAZY_SECTOR_RELEASE
+    /* Parallel to block_mapping_table: physical block with pending compaction for a group,
+       or LX_NAND_BLOCK_UNMAPPED when no compaction is pending.  */
+    USHORT                         *lx_nand_flash_block_compaction_table;
+    ULONG                           lx_nand_flash_block_compaction_table_size;
+#endif
     ULONG                           lx_nand_flash_mapped_block_list_head;
 
     ULONG                           lx_nand_flash_metadata_block_number;
@@ -771,6 +793,9 @@ UINT    _lx_nand_flash_metadata_write(LX_NAND_FLASH *nand_flash, UCHAR* main_buf
 VOID    _lx_nand_flash_system_error(LX_NAND_FLASH *nand_flash, UINT error_code, ULONG block, ULONG page);
 UINT    _lx_nand_flash_256byte_ecc_check(UCHAR *page_buffer, UCHAR *ecc_buffer);
 UINT    _lx_nand_flash_256byte_ecc_compute(UCHAR *page_buffer, UCHAR *ecc_buffer);
+#ifdef LX_NAND_FLASH_ENABLE_LAZY_SECTOR_RELEASE
+UINT    _lx_nand_flash_logical_group_compact(LX_NAND_FLASH *nand_flash, ULONG logical_group);
+#endif
 
 UINT    _lx_nor_flash_block_reclaim(LX_NOR_FLASH *nor_flash);
 UINT    _lx_nor_flash_driver_block_erase(LX_NOR_FLASH *nor_flash, ULONG block, ULONG erase_count);

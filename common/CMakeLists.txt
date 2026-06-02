@@ -23,6 +23,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 	${CMAKE_CURRENT_LIST_DIR}/src/lx_nand_flash_format_extended.c
 	${CMAKE_CURRENT_LIST_DIR}/src/lx_nand_flash_free_block_list_add.c
 	${CMAKE_CURRENT_LIST_DIR}/src/lx_nand_flash_initialize.c
+	${CMAKE_CURRENT_LIST_DIR}/src/lx_nand_flash_logical_group_compact.c
 	${CMAKE_CURRENT_LIST_DIR}/src/lx_nand_flash_mapped_block_list_add.c
 	${CMAKE_CURRENT_LIST_DIR}/src/lx_nand_flash_mapped_block_list_get.c
 	${CMAKE_CURRENT_LIST_DIR}/src/lx_nand_flash_mapped_block_list_remove.c
