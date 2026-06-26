@@ -278,6 +278,7 @@ ULONG   block_word;
         nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_sector_address =  LX_NULL;
         nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_sector_memory =   cache_memory;
         nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_access_count =    0;
+        nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_valid =           LX_FALSE;
 
         /* Move the cache memory forward.   */
         cache_memory =  cache_memory + LX_NOR_SECTOR_SIZE;
