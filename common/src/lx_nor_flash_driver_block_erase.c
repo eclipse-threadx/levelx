@@ -107,7 +107,7 @@ ULONG   cache_entry_end_value;
             cache_entry_start_value =  (ULONG)cache_entry_start;
             cache_entry_end_value =    cache_entry_start_value + (LX_NOR_SECTOR_SIZE * sizeof(ULONG));
 
-            if ((block_start_address <= cache_entry_start_value) && (block_end_address > cache_entry_end_value))
+            if ((block_start_address <= cache_entry_start_value) && (block_end_address >= cache_entry_end_value))
             {
 
                 /* Yes, this cache entry is in the block to be erased so invalidate it.  */

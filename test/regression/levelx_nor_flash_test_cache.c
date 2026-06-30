@@ -264,6 +264,7 @@ void    thread_0_entry(ULONG thread_input)
 ULONG   i, j, sector;
 #ifndef LX_NOR_DISABLE_EXTENDED_CACHE
 ULONG   read_count;
+ULONG   *last_sector_address;
 #endif
 UINT    status;
 
@@ -280,6 +281,9 @@ ULONG   *word_ptr;
     LX_MEMSET(&nor_sim_flash, 0, sizeof(nor_sim_flash));
     status =  zero_base_nor_initialize(&nor_sim_flash);
     nor_zero_base_memory[0] =  0x12345678;
+    /* MISRA C:2012 Rule 11.6 deviation: this test driver intentionally
+       treats NOR flash addresses as logical offset tokens.  */
+    last_sector_address =  (ULONG *)(LX_NOR_SECTOR_SIZE * sizeof(ULONG));
     nor_zero_base_driver_read_count =  0;
 
     if (status == LX_SUCCESS)
@@ -349,6 +353,53 @@ ULONG   *word_ptr;
     if (status == LX_SUCCESS)
     {
         status =  _lx_nor_flash_driver_read(&nor_sim_flash, LX_NULL, readbuffer, 1);
+    }
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != LX_ALL_ONES) || (nor_zero_base_driver_read_count != (read_count + 1)))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    nor_zero_base_memory[LX_NOR_SECTOR_SIZE] =  0xABCDEF01;
+
+    status =  _lx_nor_flash_driver_read(&nor_sim_flash, last_sector_address, readbuffer, 1);
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != 0xABCDEF01) || (nor_zero_base_driver_read_count != (read_count + 2)))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    status =  _lx_nor_flash_driver_read(&nor_sim_flash, last_sector_address, readbuffer, 1);
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != 0xABCDEF01) || (nor_zero_base_driver_read_count != (read_count + 2)))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    read_count =  nor_zero_base_driver_read_count;
+    status =  _lx_nor_flash_driver_block_erase(&nor_sim_flash, 0, 0);
+
+    if (status == LX_SUCCESS)
+    {
+        status =  _lx_nor_flash_driver_read(&nor_sim_flash, last_sector_address, readbuffer, 1);
     }
 
     if ((status != LX_SUCCESS) || (readbuffer[0] != LX_ALL_ONES) || (nor_zero_base_driver_read_count != (read_count + 1)))
