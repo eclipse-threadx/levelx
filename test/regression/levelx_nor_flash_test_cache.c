@@ -34,11 +34,30 @@ ULONG           readbuffer[128];
 UCHAR   nor_cache_memory[2048+16+8];
 UCHAR   nor_cache_memory2[8192];
 UCHAR   nor_cache_memory_invalid[256];
+#ifndef LX_NOR_DISABLE_EXTENDED_CACHE
+UCHAR   nor_zero_base_cache_memory[512];
+ULONG   nor_zero_base_memory[LX_NOR_SECTOR_SIZE * 2];
+ULONG   nor_zero_base_driver_read_count;
+#endif
 
 
 /* Define LevelX NOR flash simulator prototoypes.  */
 
 UINT  _lx_nor_flash_simulator_initialize(LX_NOR_FLASH *nor_flash);
+#ifndef LX_NOR_DISABLE_EXTENDED_CACHE
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+static UINT  zero_base_nor_read(LX_NOR_FLASH *nor_flash, ULONG *flash_address, ULONG *destination, ULONG words);
+static UINT  zero_base_nor_write(LX_NOR_FLASH *nor_flash, ULONG *flash_address, ULONG *source, ULONG words);
+static UINT  zero_base_nor_block_erase(LX_NOR_FLASH *nor_flash, ULONG block, ULONG erase_count);
+static UINT  zero_base_nor_block_erased_verify(LX_NOR_FLASH *nor_flash, ULONG block);
+#else
+static UINT  zero_base_nor_read(ULONG *flash_address, ULONG *destination, ULONG words);
+static UINT  zero_base_nor_write(ULONG *flash_address, ULONG *source, ULONG words);
+static UINT  zero_base_nor_block_erase(ULONG block, ULONG erase_count);
+static UINT  zero_base_nor_block_erased_verify(ULONG block);
+#endif
+static UINT  zero_base_nor_initialize(LX_NOR_FLASH *nor_flash);
+#endif
 
 
 
@@ -76,12 +95,177 @@ void    tx_application_define(void *first_unused_memory)
 }
 #endif
 
+#ifndef LX_NOR_DISABLE_EXTENDED_CACHE
+static UINT  zero_base_nor_initialize(LX_NOR_FLASH *nor_flash)
+{
+
+UINT    status;
+
+
+    /* Setup the base address as a logical zero offset.  */
+    nor_flash -> lx_nor_flash_base_address =                LX_NULL;
+
+    /* Setup geometry of the test flash.  */
+    nor_flash -> lx_nor_flash_total_blocks =                1;
+    nor_flash -> lx_nor_flash_words_per_block =             LX_NOR_SECTOR_SIZE * 2;
+
+    /* Setup function pointers for the NOR flash services.  */
+    nor_flash -> lx_nor_flash_driver_read =                 zero_base_nor_read;
+    nor_flash -> lx_nor_flash_driver_write =                zero_base_nor_write;
+    nor_flash -> lx_nor_flash_driver_block_erase =          zero_base_nor_block_erase;
+    nor_flash -> lx_nor_flash_driver_block_erased_verify =  zero_base_nor_block_erased_verify;
+
+    /* Setup local buffer for NOR flash operation.  */
+    nor_flash -> lx_nor_flash_sector_buffer =               buffer;
+
+    /* Erase the test flash.  */
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    status =  zero_base_nor_block_erase(nor_flash, 0, 0);
+#else
+    status =  zero_base_nor_block_erase(0, 0);
+#endif
+
+    /* Return completion status.  */
+    return(status);
+}
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+static UINT  zero_base_nor_read(LX_NOR_FLASH *nor_flash, ULONG *flash_address, ULONG *destination, ULONG words)
+#else
+static UINT  zero_base_nor_read(ULONG *flash_address, ULONG *destination, ULONG words)
+#endif
+{
+
+ULONG   offset;
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nor_flash);
+#endif
+
+    /* MISRA C:2012 Rule 11.4 deviation: this test driver intentionally treats
+       NOR flash addresses as logical offsets, including zero.  */
+    offset =  ((ULONG)flash_address) / sizeof(ULONG);
+
+    if ((offset + words) > (LX_NOR_SECTOR_SIZE * 2))
+    {
+        return(LX_ERROR);
+    }
+
+    nor_zero_base_driver_read_count++;
+
+    while (words--)
+    {
+        *destination++ =  nor_zero_base_memory[offset++];
+    }
+
+    return(LX_SUCCESS);
+}
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+static UINT  zero_base_nor_write(LX_NOR_FLASH *nor_flash, ULONG *flash_address, ULONG *source, ULONG words)
+#else
+static UINT  zero_base_nor_write(ULONG *flash_address, ULONG *source, ULONG words)
+#endif
+{
+
+ULONG   offset;
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nor_flash);
+#endif
+
+    /* MISRA C:2012 Rule 11.4 deviation: this test driver intentionally treats
+       NOR flash addresses as logical offsets, including zero.  */
+    offset =  ((ULONG)flash_address) / sizeof(ULONG);
+
+    if ((offset + words) > (LX_NOR_SECTOR_SIZE * 2))
+    {
+        return(LX_ERROR);
+    }
+
+    while (words--)
+    {
+        nor_zero_base_memory[offset++] =  *source++;
+    }
+
+    return(LX_SUCCESS);
+}
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+static UINT  zero_base_nor_block_erase(LX_NOR_FLASH *nor_flash, ULONG block, ULONG erase_count)
+#else
+static UINT  zero_base_nor_block_erase(ULONG block, ULONG erase_count)
+#endif
+{
+
+ULONG   offset;
+ULONG   words;
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nor_flash);
+#endif
+    LX_PARAMETER_NOT_USED(erase_count);
+
+    if (block != 0)
+    {
+        return(LX_ERROR);
+    }
+
+    offset =  0;
+    words =   LX_NOR_SECTOR_SIZE * 2;
+
+    while (words--)
+    {
+        nor_zero_base_memory[offset++] =  LX_ALL_ONES;
+    }
+
+    return(LX_SUCCESS);
+}
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+static UINT  zero_base_nor_block_erased_verify(LX_NOR_FLASH *nor_flash, ULONG block)
+#else
+static UINT  zero_base_nor_block_erased_verify(ULONG block)
+#endif
+{
+
+ULONG   offset;
+ULONG   words;
+
+#ifdef LX_NOR_ENABLE_CONTROL_BLOCK_FOR_DRIVER_INTERFACE
+    LX_PARAMETER_NOT_USED(nor_flash);
+#endif
+
+    if (block != 0)
+    {
+        return(LX_ERROR);
+    }
+
+    offset =  0;
+    words =   LX_NOR_SECTOR_SIZE * 2;
+
+    while (words--)
+    {
+        if (nor_zero_base_memory[offset++] != LX_ALL_ONES)
+        {
+            return(LX_ERROR);
+        }
+    }
+
+    return(LX_SUCCESS);
+}
+#endif
+
 /* Define the test threads.  */
 
 void    thread_0_entry(ULONG thread_input)
 {
 
 ULONG   i, j, sector;
+#ifndef LX_NOR_DISABLE_EXTENDED_CACHE
+ULONG   read_count;
+ULONG   *last_sector_address;
+#endif
 UINT    status;
 
 ULONG   *word_ptr;
@@ -89,6 +273,148 @@ ULONG   *word_ptr;
 
     /* Initialize LevelX.  */
     _lx_nor_flash_initialize();
+
+#ifndef LX_NOR_DISABLE_EXTENDED_CACHE
+    /* Test 0: Extended cache with a zero NOR flash base address.  */
+    printf("Test 0: Extended cache with zero base address....");
+
+    LX_MEMSET(&nor_sim_flash, 0, sizeof(nor_sim_flash));
+    status =  zero_base_nor_initialize(&nor_sim_flash);
+    nor_zero_base_memory[0] =  0x12345678;
+    /* MISRA C:2012 Rule 11.6 deviation: this test driver intentionally
+       treats NOR flash addresses as logical offset tokens.  */
+    last_sector_address =  (ULONG *)(LX_NOR_SECTOR_SIZE * sizeof(ULONG));
+    nor_zero_base_driver_read_count =  0;
+
+    if (status == LX_SUCCESS)
+    {
+        status =  lx_nor_flash_extended_cache_enable(&nor_sim_flash, nor_zero_base_cache_memory, sizeof(nor_zero_base_cache_memory));
+    }
+
+    if (status == LX_SUCCESS)
+    {
+        status =  _lx_nor_flash_driver_read(&nor_sim_flash, LX_NULL, readbuffer, 1);
+    }
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != 0x12345678) || (nor_zero_base_driver_read_count != 1))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    status =  _lx_nor_flash_driver_read(&nor_sim_flash, LX_NULL, readbuffer, 1);
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != 0x12345678) || (nor_zero_base_driver_read_count != 1))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    buffer[0] =  0x87654321;
+    status =  _lx_nor_flash_driver_write(&nor_sim_flash, LX_NULL, buffer, 1);
+
+    if ((status != LX_SUCCESS) || (nor_zero_base_memory[0] != 0x87654321))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    status =  _lx_nor_flash_driver_read(&nor_sim_flash, LX_NULL, readbuffer, 1);
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != 0x87654321) || (nor_zero_base_driver_read_count != 1))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    read_count =  nor_zero_base_driver_read_count;
+    status =  _lx_nor_flash_driver_block_erase(&nor_sim_flash, 0, 0);
+
+    if (status == LX_SUCCESS)
+    {
+        status =  _lx_nor_flash_driver_read(&nor_sim_flash, LX_NULL, readbuffer, 1);
+    }
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != LX_ALL_ONES) || (nor_zero_base_driver_read_count != (read_count + 1)))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    nor_zero_base_memory[LX_NOR_SECTOR_SIZE] =  0xABCDEF01;
+
+    status =  _lx_nor_flash_driver_read(&nor_sim_flash, last_sector_address, readbuffer, 1);
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != 0xABCDEF01) || (nor_zero_base_driver_read_count != (read_count + 2)))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    status =  _lx_nor_flash_driver_read(&nor_sim_flash, last_sector_address, readbuffer, 1);
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != 0xABCDEF01) || (nor_zero_base_driver_read_count != (read_count + 2)))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    read_count =  nor_zero_base_driver_read_count;
+    status =  _lx_nor_flash_driver_block_erase(&nor_sim_flash, 0, 0);
+
+    if (status == LX_SUCCESS)
+    {
+        status =  _lx_nor_flash_driver_read(&nor_sim_flash, last_sector_address, readbuffer, 1);
+    }
+
+    if ((status != LX_SUCCESS) || (readbuffer[0] != LX_ALL_ONES) || (nor_zero_base_driver_read_count != (read_count + 1)))
+    {
+          printf("FAILED!\n");
+#ifdef BATCH_TEST
+    exit(1);
+#endif
+          while(1)
+          {
+          }
+    }
+
+    printf("SUCCESS!\n");
+#endif
 
     /* Test 1: Simple write 100 sectors and read 100 sectors.  */
     printf("Test 1: Simple write-read 100 sectors...........");
