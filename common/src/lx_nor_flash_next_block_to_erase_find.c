@@ -103,7 +103,7 @@ ULONG   max_logical_sector;
 UINT    status;
 #endif
 UINT    obsolete_sectors_available;
-UINT    mapped_sectors_available;
+UINT    mapped_sectors_available = LX_FALSE;
 
 
     /* Setup the block word pointer to the first word of the search block.  */
@@ -171,9 +171,10 @@ UINT    mapped_sectors_available;
         if (erase_count > max_system_block_erase_count)
             max_system_block_erase_count =  erase_count;
 
-        /* Initialize the obsolete and mapped sector count available flags.  */
+        /* Initialize the mapped sector count and the obsolete/mapped sector count availability flags.  */
         obsolete_sectors_available =  LX_FALSE;
         mapped_sectors_available =  LX_FALSE;
+        mapped_sectors =  0;
 
 #ifdef LX_NOR_ENABLE_OBSOLETE_COUNT_CACHE
 
@@ -470,4 +471,3 @@ UINT    mapped_sectors_available;
     /* Return success.  */
     return(LX_SUCCESS);
 }
-
