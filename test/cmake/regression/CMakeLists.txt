@@ -6,6 +6,7 @@ project(regression_test LANGUAGES C)
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../../regression)
 
 set(regression_test_cases
+    ${SOURCE_DIR}/levelx_nand_ecc_test.c
     ${SOURCE_DIR}/levelx_nand_flash_test.c
     ${SOURCE_DIR}/levelx_nor_flash_test.c
     ${SOURCE_DIR}/levelx_nor_flash_test_cache.c)

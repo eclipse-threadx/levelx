@@ -1,25 +1,29 @@
-# This is a basic workflow that is manually triggered
-
 name: regression_test
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [dev, master]
   pull_request:
-    branches: [ master ]
+    branches: [dev, master]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+concurrency:
+  group: levelx-regression-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  # This workflow contains a single job called "linux_job"
   run_tests:
     permissions:
       contents: read
       issues: read
       checks: write
       pull-requests: write
+      # GitHub validates deployment permissions even when deployment is skipped.
+      # The reusable test job scopes its token separately.
       pages: write
       id-token: write
-    uses: eclipse-threadx/threadx/.github/workflows/regression_template.yml@master
+    uses: eclipse-threadx/threadx/.github/workflows/regression_template.yml@b37cd4a81a1cb8c2ebefc438220ab7f009e13362
+    with:
+      coverage_name: merged
+      coverage_thresholds: '68 100'
+      skip_deploy: ${{ github.ref != 'refs/heads/master' || github.event_name == 'pull_request' }}
