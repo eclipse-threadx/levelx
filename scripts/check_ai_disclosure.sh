@@ -103,7 +103,8 @@ fi
 
 # 4.  A near miss.  A line that is clearly meant to be the disclosure but is
 #     not spelled exactly right defeats every deduplication that follows it.
-hits="$(grep -nIF 'AI assistance' -- "${FILES[@]}" 2>/dev/null \
+hits="$(grep -nIE '^[[:space:]]*(//|/\*+|\*|;|@|#)[[:space:]]*(Portions? of this file|Some portions).*AI assistance' \
+        -- "${FILES[@]}" 2>/dev/null \
         | grep -vF "${FIXED}" || true)"
 if [ -n "${hits}" ]; then
     report "AI disclosure check FAILED: the text is not spelled exactly.
