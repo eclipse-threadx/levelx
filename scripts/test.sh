@@ -10,4 +10,10 @@
 # SPDX-License-Identifier: MIT
 ##############################################################################
 
-$(dirname `realpath $0`)/../test/cmake/run.sh test all
+set -euo pipefail
+
+test_dir="$(dirname "$(realpath "$0")")/../test/cmake"
+"$test_dir/run.sh" test all
+if [ "${TX_COVERAGE:-OFF}" = ON ]; then
+    "$test_dir/check_coverage.sh"
+fi
