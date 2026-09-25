@@ -19,3 +19,9 @@ foreach(test_case ${regression_test_cases} ${regression_test_cases_exfat})
   target_compile_definitions(${test_name} PRIVATE BATCH_TEST)
   add_test(${CMAKE_BUILD_TYPE}::${test_name} ${test_name})
 endforeach()
+
+add_executable(levelx_nor_reclaim_failure_test
+               ${SOURCE_DIR}/levelx_nor_reclaim_failure_test.c)
+target_link_libraries(levelx_nor_reclaim_failure_test PRIVATE azrtos::levelx)
+add_test(${CMAKE_BUILD_TYPE}::levelx_nor_reclaim_failure_test
+         levelx_nor_reclaim_failure_test)
