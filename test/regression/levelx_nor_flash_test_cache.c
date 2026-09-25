@@ -9,6 +9,8 @@
 /* SPDX-License-Identifier: MIT                                            */
 /***************************************************************************/
 
+/* Portions of this file were generated with AI assistance. */
+
 /* Basic NOR flash tests...  */
 
 #include <stdio.h>
@@ -82,6 +84,12 @@ ULONG   i, j, sector;
 UINT    status;
 
 ULONG   *word_ptr;
+#ifdef LX_NOR_ENABLE_OBSOLETE_COUNT_CACHE
+ULONG   erase_block = LX_ALL_ONES;
+ULONG   erase_count = LX_ALL_ONES;
+ULONG   mapped_sectors = LX_ALL_ONES;
+ULONG   obsolete_sectors = LX_ALL_ONES;
+#endif
 
 
     /* Initialize LevelX.  */
@@ -1659,6 +1667,36 @@ status += lx_nor_flash_extended_cache_enable(&nor_sim_flash, nor_cache_memory2, 
           }
         }
     }
+
+#ifdef LX_NOR_ENABLE_OBSOLETE_COUNT_CACHE
+    /* Verify the mapped sector count when the obsolete count comes from the cache.  */
+    printf("\nTest 7: Cached obsolete count with mapped sectors..");
+
+    status =  lx_nor_flash_sector_release(&nor_sim_flash, 0);
+    if (status == LX_SUCCESS)
+    {
+        status =  _lx_nor_flash_next_block_to_erase_find(&nor_sim_flash, &erase_block, &erase_count,
+                                                         &mapped_sectors, &obsolete_sectors);
+    }
+
+    if ((status != LX_SUCCESS) ||
+        (nor_sim_flash.lx_nor_flash_extended_cache_obsolete_count_max_block == 0) ||
+        (nor_sim_flash.lx_nor_flash_extended_cache_obsolete_count[0] != 1) ||
+        (erase_block != 0) ||
+        (erase_count != nor_sim_flash.lx_nor_flash_minimum_erase_count) ||
+        (mapped_sectors != (nor_sim_flash.lx_nor_flash_physical_sectors_per_block - 1)) ||
+        (obsolete_sectors != 1))
+    {
+        printf("FAILED!\n");
+#ifdef BATCH_TEST
+        exit(1);
+#endif
+        while(1)
+        {
+        }
+    }
+    printf("SUCCESS!\n");
+#endif
 
 #ifdef BATCH_TEST
     exit(0);
