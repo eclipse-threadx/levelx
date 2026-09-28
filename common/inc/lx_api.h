@@ -73,12 +73,13 @@ extern   "C" {
 #include "tx_api.h"
 #endif
 
+#include <stdint.h>
+
 
 #ifdef LX_STANDALONE_ENABLE
 
 /* Define compiler library include files.  */
 
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -288,19 +289,49 @@ typedef unsigned long long                      ULONG64;
 #endif
 
 #ifndef LX_UTILITY_SHORT_SET
-#define LX_UTILITY_SHORT_SET(address, value)        *((USHORT*)(address)) = (USHORT)(value)
+/* Store a 16-bit metadata value at any byte address.  */
+static inline VOID _lx_utility_short_set(VOID *address, USHORT value)
+{
+    uint16_t data = (uint16_t)value;
+
+    LX_MEMCPY(address, &data, sizeof(data));
+}
+#define LX_UTILITY_SHORT_SET(address, value)        _lx_utility_short_set((address), (USHORT)(value))
 #endif
 
 #ifndef LX_UTILITY_LONG_SET
-#define LX_UTILITY_LONG_SET(address, value)         *((ULONG*)(address)) = (ULONG)(value)
+/* NAND metadata words occupy four bytes on every target.  */
+static inline VOID _lx_utility_long_set(VOID *address, ULONG value)
+{
+    uint32_t data = (uint32_t)value;
+
+    LX_MEMCPY(address, &data, sizeof(data));
+}
+#define LX_UTILITY_LONG_SET(address, value)         _lx_utility_long_set((address), (ULONG)(value))
 #endif
 
 #ifndef LX_UTILITY_SHORT_GET
-#define LX_UTILITY_SHORT_GET(address)               (*((USHORT*)(address)))
+/* Read a 16-bit metadata value from any byte address.  */
+static inline USHORT _lx_utility_short_get(const VOID *address)
+{
+    uint16_t data;
+
+    LX_MEMCPY(&data, address, sizeof(data));
+    return (USHORT)data;
+}
+#define LX_UTILITY_SHORT_GET(address)               _lx_utility_short_get((address))
 #endif
 
 #ifndef LX_UTILITY_LONG_GET
-#define LX_UTILITY_LONG_GET(address)                (*((ULONG*)(address)))
+/* Read a four-byte NAND metadata word from any byte address.  */
+static inline ULONG _lx_utility_long_get(const VOID *address)
+{
+    uint32_t data;
+
+    LX_MEMCPY(&data, address, sizeof(data));
+    return (ULONG)data;
+}
+#define LX_UTILITY_LONG_GET(address)                _lx_utility_long_get((address))
 #endif
 
 /* Define the mask for the hash index into the NAND sector mapping cache table.  The sector mapping cache is divided

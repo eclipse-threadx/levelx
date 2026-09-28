@@ -1,7 +1,7 @@
 /***************************************************************************
  * Copyright (c) 2024 Microsoft Corporation
- * Copyright (c) 2026-present Eclipse ThreadX contributors
  * Copyright (c) 2025 STMicroelectronics
+ * Copyright (c) 2026-present Eclipse ThreadX contributors
  *
  * This program and the accompanying materials are made available under the
  * terms of the MIT License which is available at
@@ -9,6 +9,8 @@
  *
  * SPDX-License-Identifier: MIT
  **************************************************************************/
+
+// Portions of this file were generated with AI assistance.
 
 
 /**************************************************************************/
@@ -118,7 +120,7 @@ UCHAR                       *page_buffer_ptr;
     }
 
     /* Check the spare data length.  */
-    if (nand_flash -> lx_nand_flash_spare_data1_length < sizeof(ULONG))
+    if (nand_flash -> lx_nand_flash_spare_data1_length < sizeof(uint32_t))
     {
         return(LX_ERROR);
     }
