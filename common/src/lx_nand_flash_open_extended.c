@@ -129,7 +129,7 @@ LX_INTERRUPT_SAVE_AREA
     }
 
     /* Check the spare data length.  */
-    if (nand_flash -> lx_nand_flash_spare_data1_length < sizeof(ULONG))
+    if (nand_flash -> lx_nand_flash_spare_data1_length < sizeof(uint32_t))
     {
 
         /* Return an error.  */
