@@ -151,8 +151,8 @@ typedef unsigned long long                      ULONG64;
 #define AZURE_RTOS_LEVELX
 #define LEVELX_MAJOR_VERSION                        6
 #define LEVELX_MINOR_VERSION                        5
-#define LEVELX_PATCH_VERSION                        1
-#define LEVELX_BUILD_VERSION                        202602
+#define LEVELX_PATCH_VERSION                        2
+#define LEVELX_BUILD_VERSION                        202603
 #define LEVELX_HOTFIX_VERSION                       ' '
 
 
