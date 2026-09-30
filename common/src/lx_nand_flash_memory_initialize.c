@@ -75,7 +75,41 @@ UINT  _lx_nand_flash_memory_initialize(LX_NAND_FLASH  *nand_flash, ULONG* memory
 
 UINT    memory_offset;
 UINT    buffer_size;
+ULONG   page_size;
+ULONG   erase_count_bytes;
+ULONG   block_table_bytes;
+ULONG   erase_count_pages;
+ULONG   block_table_pages;
+ULONG   snapshot_pages;
 
+
+    /* Reserve room for a metadata snapshot, its link, and one later update.  */
+    page_size = nand_flash -> lx_nand_flash_bytes_per_page;
+    if ((page_size == 0u) || (nand_flash -> lx_nand_flash_pages_per_block < 2u))
+    {
+        return(LX_NOT_SUPPORTED);
+    }
+
+    erase_count_bytes = nand_flash -> lx_nand_flash_total_blocks * sizeof(UCHAR);
+    block_table_bytes = nand_flash -> lx_nand_flash_total_blocks * sizeof(USHORT);
+
+    erase_count_pages = erase_count_bytes / page_size;
+    if (((erase_count_bytes % page_size) != 0u) || (erase_count_pages == 0u))
+    {
+        erase_count_pages++;
+    }
+
+    block_table_pages = block_table_bytes / page_size;
+    if (((block_table_bytes % page_size) != 0u) || (block_table_pages == 0u))
+    {
+        block_table_pages++;
+    }
+
+    snapshot_pages = 1u + erase_count_pages + (2u * block_table_pages);
+    if (snapshot_pages > (nand_flash -> lx_nand_flash_pages_per_block - 2u))
+    {
+        return(LX_NOT_SUPPORTED);
+    }
 
     /* Clear the memory buffer.  */
     LX_MEMSET(memory_ptr, 0, memory_size);

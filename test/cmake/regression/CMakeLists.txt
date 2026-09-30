@@ -25,3 +25,9 @@ add_executable(levelx_nor_reclaim_failure_test
 target_link_libraries(levelx_nor_reclaim_failure_test PRIVATE azrtos::levelx)
 add_test(${CMAKE_BUILD_TYPE}::levelx_nor_reclaim_failure_test
          levelx_nor_reclaim_failure_test)
+
+add_executable(levelx_nand_metadata_geometry_test
+               ${SOURCE_DIR}/levelx_nand_metadata_geometry_test.c)
+target_link_libraries(levelx_nand_metadata_geometry_test PRIVATE azrtos::levelx)
+add_test(${CMAKE_BUILD_TYPE}::levelx_nand_metadata_geometry_test
+         levelx_nand_metadata_geometry_test)
