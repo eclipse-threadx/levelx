@@ -9,6 +9,8 @@
 /* SPDX-License-Identifier: MIT                                            */
 /***************************************************************************/
 
+/* Portions of this file were generated with AI assistance. */
+
 /* Basic NOR flash tests...  */
 
 #include <stdio.h>
@@ -163,7 +165,21 @@ UCHAR   *byte_ptr;
         for (j = 0; j < 512; j++)
           buffer[j] =  i;
 
-        status =  lx_nand_flash_sector_write(&nand_sim_flash, i, buffer);
+        status =  lx_nand_flash_page_write(&nand_sim_flash, i, buffer);
+
+        /* Check the multi-page API with two pages outside this range.  */
+        if ((i == 0) && (status == LX_SUCCESS))
+        {
+            LX_MEMSET(buffer, 0x5A, 2 * nand_sim_flash.lx_nand_flash_bytes_per_page);
+            status = lx_nand_flash_pages_write(&nand_sim_flash, 600, buffer, 2);
+            if (status == LX_SUCCESS)
+                status = lx_nand_flash_pages_read(&nand_sim_flash, 600, readbuffer, 2);
+            if ((status == LX_SUCCESS) &&
+                (memcmp(buffer, readbuffer, 2 * nand_sim_flash.lx_nand_flash_bytes_per_page) != 0))
+                status = LX_ERROR;
+            if (status == LX_SUCCESS)
+                status = lx_nand_flash_pages_release(&nand_sim_flash, 600, 2);
+        }
 
         if (status != LX_SUCCESS)
         {
@@ -199,7 +215,7 @@ UCHAR   *byte_ptr;
     for (i = 0; i < 520; i++)
     {
 
-        status =  lx_nand_flash_sector_read(&nand_sim_flash, i, buffer);
+        status =  lx_nand_flash_page_read(&nand_sim_flash, i, buffer);
 
         if (status != LX_SUCCESS)
         {
@@ -1624,7 +1640,7 @@ UCHAR   *byte_ptr;
           }
         }
 
-    status =  lx_nand_flash_sector_release(&nand_sim_flash, 7);
+    status =  lx_nand_flash_page_release(&nand_sim_flash, 7);
     if (status != LX_SUCCESS)
         {
           printf("FAILED!\n");
