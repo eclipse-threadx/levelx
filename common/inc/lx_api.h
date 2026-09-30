@@ -706,12 +706,20 @@ extern ULONG                                            _lx_nor_flash_opened_cou
 #define lx_nand_flash_open_extended                     _lx_nand_flash_open_extended
 #define lx_nand_flash_page_ecc_check                    _lx_nand_flash_page_ecc_check
 #define lx_nand_flash_page_ecc_compute                  _lx_nand_flash_page_ecc_compute
-#define lx_nand_flash_sector_read                       _lx_nand_flash_sector_read
-#define lx_nand_flash_sector_release                    _lx_nand_flash_sector_release
-#define lx_nand_flash_sector_write                      _lx_nand_flash_sector_write
-#define lx_nand_flash_sectors_read                      _lx_nand_flash_sectors_read
-#define lx_nand_flash_sectors_release                   _lx_nand_flash_sectors_release
-#define lx_nand_flash_sectors_write                     _lx_nand_flash_sectors_write
+#define lx_nand_flash_page_read                         _lx_nand_flash_sector_read
+#define lx_nand_flash_page_release                      _lx_nand_flash_sector_release
+#define lx_nand_flash_page_write                        _lx_nand_flash_sector_write
+#define lx_nand_flash_pages_read                        _lx_nand_flash_sectors_read
+#define lx_nand_flash_pages_release                     _lx_nand_flash_sectors_release
+#define lx_nand_flash_pages_write                       _lx_nand_flash_sectors_write
+
+/* Both NAND API spellings use the same entry points.  */
+#define lx_nand_flash_sector_read                       lx_nand_flash_page_read
+#define lx_nand_flash_sector_release                    lx_nand_flash_page_release
+#define lx_nand_flash_sector_write                      lx_nand_flash_page_write
+#define lx_nand_flash_sectors_read                      lx_nand_flash_pages_read
+#define lx_nand_flash_sectors_release                   lx_nand_flash_pages_release
+#define lx_nand_flash_sectors_write                     lx_nand_flash_pages_write
 #define lx_nand_flash_256byte_ecc_check                 _lx_nand_flash_256byte_ecc_check
 #define lx_nand_flash_256byte_ecc_compute               _lx_nand_flash_256byte_ecc_compute
 
@@ -748,12 +756,12 @@ UINT    _lx_nand_flash_open_extended(LX_NAND_FLASH  *nand_flash, CHAR *name,
 UINT    _lx_nand_flash_page_ecc_check(LX_NAND_FLASH *nand_flash, UCHAR *page_buffer, UCHAR *ecc_buffer);
 UINT    _lx_nand_flash_page_ecc_compute(LX_NAND_FLASH *nand_flash, UCHAR *page_buffer, UCHAR *ecc_buffer);
 UINT    _lx_nand_flash_partial_defragment(LX_NAND_FLASH *nand_flash, UINT max_blocks);
-UINT    _lx_nand_flash_sector_read(LX_NAND_FLASH *nand_flash, ULONG logical_sector, VOID *buffer);
-UINT    _lx_nand_flash_sector_release(LX_NAND_FLASH *nand_flash, ULONG logical_sector);
-UINT    _lx_nand_flash_sector_write(LX_NAND_FLASH *nand_flash, ULONG logical_sector, VOID *buffer);
-UINT    _lx_nand_flash_sectors_read(LX_NAND_FLASH* nand_flash, ULONG logical_sector, VOID* buffer, ULONG sector_count);
-UINT    _lx_nand_flash_sectors_release(LX_NAND_FLASH* nand_flash, ULONG logical_sector, ULONG sector_count);
-UINT    _lx_nand_flash_sectors_write(LX_NAND_FLASH* nand_flash, ULONG logical_sector, VOID* buffer, ULONG sector_count);
+UINT    _lx_nand_flash_sector_read(LX_NAND_FLASH *nand_flash, ULONG logical_page, VOID *buffer);
+UINT    _lx_nand_flash_sector_release(LX_NAND_FLASH *nand_flash, ULONG logical_page);
+UINT    _lx_nand_flash_sector_write(LX_NAND_FLASH *nand_flash, ULONG logical_page, VOID *buffer);
+UINT    _lx_nand_flash_sectors_read(LX_NAND_FLASH* nand_flash, ULONG logical_page, VOID* buffer, ULONG page_count);
+UINT    _lx_nand_flash_sectors_release(LX_NAND_FLASH* nand_flash, ULONG logical_page, ULONG page_count);
+UINT    _lx_nand_flash_sectors_write(LX_NAND_FLASH* nand_flash, ULONG logical_page, VOID* buffer, ULONG page_count);
 
 UINT    _lx_nor_flash_close(LX_NOR_FLASH *nor_flash);
 UINT    _lx_nor_flash_defragment(LX_NOR_FLASH *nor_flash);
