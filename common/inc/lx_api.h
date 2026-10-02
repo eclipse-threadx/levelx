@@ -10,6 +10,8 @@
  * SPDX-License-Identifier: MIT
  **************************************************************************/
 
+// Portions of this file were generated with AI assistance.
+
 
 /**************************************************************************/
 /**************************************************************************/
@@ -149,8 +151,8 @@ typedef unsigned long long                      ULONG64;
 #define AZURE_RTOS_LEVELX
 #define LEVELX_MAJOR_VERSION                        6
 #define LEVELX_MINOR_VERSION                        5
-#define LEVELX_PATCH_VERSION                        1
-#define LEVELX_BUILD_VERSION                        202602
+#define LEVELX_PATCH_VERSION                        2
+#define LEVELX_BUILD_VERSION                        202603
 #define LEVELX_HOTFIX_VERSION                       ' '
 
 
@@ -537,6 +539,7 @@ typedef struct LX_NOR_FLASH_EXTENDED_CACHE_ENTRY_STRUCT
     ULONG                           *lx_nor_flash_extended_cache_entry_sector_address;
     ULONG                           *lx_nor_flash_extended_cache_entry_sector_memory;
     ULONG                           lx_nor_flash_extended_cache_entry_access_count;
+    UINT                            lx_nor_flash_extended_cache_entry_valid;
 } LX_NOR_FLASH_EXTENDED_CACHE_ENTRY;
 
 
@@ -814,4 +817,3 @@ VOID    _lx_nor_flash_system_error(LX_NOR_FLASH *nor_flash, UINT error_code);
 #endif
 
 #endif
-

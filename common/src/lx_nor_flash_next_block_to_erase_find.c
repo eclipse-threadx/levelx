@@ -471,3 +471,4 @@ UINT    mapped_sectors_available = LX_FALSE;
     /* Return success.  */
     return(LX_SUCCESS);
 }
+

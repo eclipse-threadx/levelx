@@ -9,6 +9,8 @@
  * SPDX-License-Identifier: MIT
  **************************************************************************/
 
+/* Portions of this file were generated with AI assistance. */
+
 
 /**************************************************************************/
 /**************************************************************************/
@@ -294,7 +296,8 @@ UINT    status;
                     _lx_nor_flash_physical_sector_allocate(nor_flash, logical_sector, &new_mapping_address, &new_sector_address);
 
                     /* Check to see if the new sector is also in the erase block.  */
-                    if ((new_sector_address >= block_word_ptr) && (new_sector_address < (block_word_ptr + nor_flash -> lx_nor_flash_words_per_block)))
+                    if ((new_mapping_address != LX_NULL) && (new_sector_address >= block_word_ptr) &&
+                        (new_sector_address < (block_word_ptr + nor_flash -> lx_nor_flash_words_per_block)))
                     {
 
                         /* Yes, the new sector was found in the block to be erased. Simply move the search pointer
@@ -311,7 +314,8 @@ UINT    status;
                         /* Check again for the new sector inside of the block to erase. This should be impossible, since
                            we check previously if there are enough free sectors outside of this block needed to reclaim
                            this block.  */
-                        if ((new_sector_address >= block_word_ptr) && (new_sector_address < (block_word_ptr + LX_NOR_SECTOR_SIZE)))
+                        if ((new_mapping_address != LX_NULL) && (new_sector_address >= block_word_ptr) &&
+                            (new_sector_address < (block_word_ptr + LX_NOR_SECTOR_SIZE)))
                         {
 
                             /* System error, a new sector is not available outside of the erase block.
@@ -453,7 +457,7 @@ UINT    status;
                         _lx_nor_flash_system_error(nor_flash, LX_SYSTEM_ALLOCATION_FAILED);
 
                         /* Return the error.  */
-                        return(status);
+                        return(LX_SYSTEM_ALLOCATION_FAILED);
                     }
 
                     /* Decrement the number of mapped sectors.  */

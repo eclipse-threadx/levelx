@@ -9,6 +9,8 @@
  * SPDX-License-Identifier: MIT
  **************************************************************************/
 
+// Portions of this file were generated with AI assistance.
+
 
 /**************************************************************************/
 /**************************************************************************/
@@ -93,8 +95,11 @@ ULONG   block_word;
 #endif
 
 
+    /* Calculate cache size in words.  */
+    cache_size = size / sizeof(ULONG);
+
     /* Determine if memory was specified but with an invalid size (less than one NOR sector).  */
-    if ((memory) && (size < LX_NOR_SECTOR_SIZE))
+    if ((memory) && (cache_size < LX_NOR_SECTOR_SIZE))
     {
 
         /* Error in memory size supplied.  */
@@ -109,9 +114,6 @@ ULONG   block_word;
 
     /* Initialize the internal NOR cache.  */
     nor_flash -> lx_nor_flash_extended_cache_entries =  0;
-
-    /* Calculate cache size in words.  */
-    cache_size = size/sizeof(ULONG);
 
     /* Setup cache memory pointer.  */
     cache_memory =  (ULONG *) memory;
@@ -276,6 +278,7 @@ ULONG   block_word;
         nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_sector_address =  LX_NULL;
         nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_sector_memory =   cache_memory;
         nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_access_count =    0;
+        nor_flash -> lx_nor_flash_extended_cache[i].lx_nor_flash_extended_cache_entry_valid =           LX_FALSE;
 
         /* Move the cache memory forward.   */
         cache_memory =  cache_memory + LX_NOR_SECTOR_SIZE;
@@ -317,5 +320,3 @@ ULONG   block_word;
     return(LX_DISABLED);
 #endif
 }
-
-

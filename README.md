@@ -6,7 +6,7 @@ LevelX provides NAND and NOR flash wear leveling facilities to embedded applicat
 
 LevelX as part of Eclipse ThreadX has been integrated to the semiconductor's SDKs and development environment. You can develop using the tools of choice from [STMicroelectronics](https://www.st.com/content/st_com/en/campaigns/x-cube-azrtos-azure-rtos-stm32.html), [NXP](https://www.nxp.com/design/software/embedded-software/azure-rtos-for-nxp-microcontrollers:AZURE-RTOS), [Renesas](https://github.com/renesas/azure-rtos) and [Microchip](https://mu.microchip.com/get-started-simplifying-your-iot-design-with-azure-rtos).
 
-See [Overview of Eclipse ThreadX LevelX](https://github.com/eclipse-threadx/rtos-docs/blob/main/rtos-docs/levelx/index.md) for the high-level overview.
+See [Overview of Eclipse ThreadX LevelX](https://threadx.io/releases/6.5.1/levelx/main/index.html) for the high-level overview.
 
 ## Repository Structure and Usage
 
@@ -122,7 +122,7 @@ License terms for using Eclipse ThreadX are defined in the LICENSE.txt file of t
 
 The following are references to additional Eclipse ThreadX resources:
 
-- **Product introduction**: https://github.com/eclipse-threadx/rtos-docs
+- **Product introduction**: https://threadx.io/releases/latest
 - **Product issues and bugs, or feature requests**: https://github.com/eclipse-threadx/levelx/issues
 - **TraceX Installer**: https://aka.ms/azrtos-tracex-installer
 

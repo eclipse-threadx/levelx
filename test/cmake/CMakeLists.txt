@@ -78,14 +78,19 @@ add_subdirectory(regression)
 add_subdirectory(samples)
 
 # Coverage
-if(CMAKE_BUILD_TYPE MATCHES ".*_coverage")
+option(TX_COVERAGE "Instrument every regression configuration" OFF)
+if(TX_COVERAGE OR CMAKE_BUILD_TYPE MATCHES ".*_coverage")
   target_compile_options(levelx PRIVATE -fprofile-arcs -ftest-coverage)
   target_link_options(levelx PRIVATE -fprofile-arcs -ftest-coverage)
 endif()
 
 
 # Build ThreadX library once
-execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/run.sh build_libs)
+execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/run.sh build_libs
+                RESULT_VARIABLE dependency_status)
+if(NOT dependency_status EQUAL 0)
+  message(FATAL_ERROR "Dependency build failed: ${dependency_status}")
+endif()
 add_custom_target(build_libs ALL COMMAND ${CMAKE_CURRENT_LIST_DIR}/run.sh
                                              build_libs)
 add_dependencies(levelx build_libs)

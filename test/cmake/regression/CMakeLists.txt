@@ -6,6 +6,7 @@ project(regression_test LANGUAGES C)
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../../regression)
 
 set(regression_test_cases
+    ${SOURCE_DIR}/levelx_nand_ecc_test.c
     ${SOURCE_DIR}/levelx_nand_flash_test.c
     ${SOURCE_DIR}/levelx_nor_flash_test.c
     ${SOURCE_DIR}/levelx_nor_flash_test_cache.c)
@@ -18,3 +19,9 @@ foreach(test_case ${regression_test_cases} ${regression_test_cases_exfat})
   target_compile_definitions(${test_name} PRIVATE BATCH_TEST)
   add_test(${CMAKE_BUILD_TYPE}::${test_name} ${test_name})
 endforeach()
+
+add_executable(levelx_nor_reclaim_failure_test
+               ${SOURCE_DIR}/levelx_nor_reclaim_failure_test.c)
+target_link_libraries(levelx_nor_reclaim_failure_test PRIVATE azrtos::levelx)
+add_test(${CMAKE_BUILD_TYPE}::levelx_nor_reclaim_failure_test
+         levelx_nor_reclaim_failure_test)
