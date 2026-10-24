@@ -10,6 +10,8 @@
 # SPDX-License-Identifier: MIT
 ##############################################################################
 
+# Portions of this file were generated with AI assistance.
+
 set -euo pipefail
 
 # Retry transient package and network failures a bounded number of times.
@@ -30,9 +32,14 @@ apt_options=(-o Acquire::Retries=3 -o DPkg::Lock::Timeout=60)
 if ! retry sudo timeout 150 apt-get "${apt_options[@]}" update; then
     echo "Package index update failed; package installation will verify availability." >&2
 fi
-retry sudo timeout 150 apt-get "${apt_options[@]}" install -y \
-    cmake gcc-14 gcc-14-multilib git ninja-build python3-venv \
-    unifdef p7zip-full tofrodos gawk
+# CMake is installed only when none is on PATH. A GitHub runner image carries a
+# newer one in /usr/local/bin, which shadows the apt package.
+packages=(gcc-14 gcc-14-multilib git ninja-build python3-venv
+    unifdef p7zip-full tofrodos gawk)
+if ! command -v cmake > /dev/null; then
+    packages+=(cmake)
+fi
+retry sudo timeout 150 apt-get "${apt_options[@]}" install -y "${packages[@]}"
 
 venv_dir="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/levelx-ci-venv"
 python3 -m venv "$venv_dir"
