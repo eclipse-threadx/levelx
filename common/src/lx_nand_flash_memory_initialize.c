@@ -75,6 +75,7 @@ UINT  _lx_nand_flash_memory_initialize(LX_NAND_FLASH  *nand_flash, ULONG* memory
 
 UINT    memory_offset;
 UINT    buffer_size;
+UINT    alignment_padding;
 
 
     /* Clear the memory buffer.  */
@@ -223,6 +224,18 @@ UINT    buffer_size;
     }
     }
 #endif
+
+    /* Align the page buffer for drivers that access it as ULONG words.  */
+    alignment_padding = (UINT)(memory_offset % sizeof(ULONG));
+    if (alignment_padding != 0u)
+    {
+        alignment_padding = (UINT)sizeof(ULONG) - alignment_padding;
+    }
+    if (alignment_padding > memory_size - memory_offset)
+    {
+        return(LX_NO_MEMORY);
+    }
+    memory_offset += alignment_padding;
 
     /* Assign memory for page buffer.  */
     nand_flash -> lx_nand_flash_page_buffer = ((UCHAR*)memory_ptr) + memory_offset;

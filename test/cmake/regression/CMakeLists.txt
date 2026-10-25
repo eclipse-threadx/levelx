@@ -20,6 +20,14 @@ foreach(test_case ${regression_test_cases} ${regression_test_cases_exfat})
   add_test(${CMAKE_BUILD_TYPE}::${test_name} ${test_name})
 endforeach()
 
+add_executable(levelx_nand_alignment_test
+    ${SOURCE_DIR}/levelx_nand_alignment_test.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../../common/src/lx_nand_flash_memory_initialize.c)
+target_include_directories(levelx_nand_alignment_test PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/../../../common/inc)
+target_compile_definitions(levelx_nand_alignment_test PRIVATE LX_STANDALONE_ENABLE)
+add_test(${CMAKE_BUILD_TYPE}::levelx_nand_alignment_test levelx_nand_alignment_test)
+
 add_executable(levelx_nor_reclaim_failure_test
                ${SOURCE_DIR}/levelx_nor_reclaim_failure_test.c)
 target_link_libraries(levelx_nor_reclaim_failure_test PRIVATE azrtos::levelx)
